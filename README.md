@@ -31,10 +31,11 @@ npm test               # unit tests (Vitest)
 
 ## Project structure
 
-- `src/entrypoints/` — entry points (new tab, background, popup later)
+- `src/entrypoints/` — entry points (new tab, popup, background)
 - `src/lib/` — storage wrapper, types, migrations, defaults
 - `src/widgets/` — widgets (one module per widget)
 - `src/components/` — shared UI components
+- `src/assets/` — shared styles
 - `src/utils/` — helpers
 - `src/public/icons/` — extension icons (16/32/48/128)
 

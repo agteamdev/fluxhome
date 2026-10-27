@@ -2,6 +2,12 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.4.0
+
+- Search: instant filtering of all bookmarks on the page (title, URL, tags, group name). Press `/` to focus, `Enter` opens the first result, `Esc` clears.
+- Popup: "Save this page" button in the toolbar. Choose the group or create a new one, edit the title; warns if the URL is already saved.
+- Shared theme variables (`src/assets/theme.css`).
+
 ## 0.3.0
 
 - Export: download all data as a JSON backup (`fluxhome-backup-YYYY-MM-DD.json`).

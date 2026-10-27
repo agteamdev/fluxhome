@@ -1,6 +1,7 @@
 import { el } from './dom';
 import { renderWidget } from '@/widgets';
 import { renderBackupButtons } from './backup-actions';
+import { renderSearch } from './search-bar';
 import { makeColumnDropZone } from './widget-dnd';
 import { moveWidget } from '@/lib/page-ops';
 import { updatePage } from '@/lib/page-store';
@@ -58,6 +59,10 @@ export function renderPage(root: HTMLElement, config: StorageSchema): void {
   const greeting = config.settings.showGreeting
     ? getGreeting(new Date(), config.settings.userName, config.settings.greetingByTime)
     : '';
-  root.append(el('header', { class: 'header' }, [el('h1', { text: greeting }), renderBackupButtons()]));
-  root.append(renderColumns(page, config.settings.columnsCount));
+  const columns = renderColumns(page, config.settings.columnsCount);
+  const search = renderSearch(page, columns);
+  const headerItems: HTMLElement[] = [];
+  if (greeting) headerItems.push(el('h1', { text: greeting }));
+  headerItems.push(search.bar, renderBackupButtons());
+  root.append(el('header', { class: 'header' }, headerItems), search.results, columns);
 }

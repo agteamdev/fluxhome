@@ -2,7 +2,7 @@
   "name": "fluxhome",
   "description": "FluxHome — a local-first start page (new tab) with no cloud and no telemetry",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",

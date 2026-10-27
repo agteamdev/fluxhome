@@ -1,4 +1,5 @@
 import type { Bookmark, BookmarkGroup, Page, WidgetConfig } from './types';
+import { normalizeUrl } from '@/utils/url';
 
 /**
  * Pure functions that take a Page and return a new Page.
@@ -94,4 +95,16 @@ export function moveWidget(page: Page, widgetId: string, toColumnId: string, bef
   for (const w of rest) if (!known.has(w.columnId)) result.push(w);
 
   return { ...page, widgets: result };
+}
+
+const urlKey = (url: string): string => (normalizeUrl(url) ?? url).replace(/\/$/, '');
+
+/** Finds an existing bookmark with the same URL (ignores a trailing slash). */
+export function findBookmarkByUrl(page: Page, url: string): { group: BookmarkGroup; bookmark: Bookmark } | null {
+  const key = urlKey(url);
+  for (const group of page.groups) {
+    const bookmark = group.bookmarks.find((b) => urlKey(b.url) === key);
+    if (bookmark) return { group, bookmark };
+  }
+  return null;
 }

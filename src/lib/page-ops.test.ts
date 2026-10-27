@@ -4,6 +4,7 @@ import {
   addGroup,
   deleteBookmark,
   deleteGroup,
+  findBookmarkByUrl,
   moveBookmark,
   moveWidget,
   renameGroup,
@@ -98,5 +99,16 @@ describe('moveWidget', () => {
   it('ignores an unknown column', () => {
     const page = makePage();
     expect(moveWidget(page, 'w1', 'missing', null)).toBe(page);
+  });
+});
+
+describe('findBookmarkByUrl', () => {
+  it('finds a bookmark ignoring a trailing slash', () => {
+    const found = findBookmarkByUrl(makePage(), 'https://d.test');
+    expect(found?.bookmark.id).toBe('d');
+    expect(found?.group.id).toBe('g2');
+  });
+  it('returns null when there is no match', () => {
+    expect(findBookmarkByUrl(makePage(), 'https://nope.test/')).toBeNull();
   });
 });
