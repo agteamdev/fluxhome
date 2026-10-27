@@ -2,6 +2,12 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.3.0
+
+- Export: download all data as a JSON backup (`fluxhome-backup-YYYY-MM-DD.json`).
+- Import: restore from a backup file with validation, schema version check, automatic migration of older backups and sanitizing (unsafe URLs, duplicate ids, missing fields).
+- Toast notifications.
+
 ## 0.2.0
 
 - Bookmarks: add, edit and delete bookmarks; add, rename and delete groups (modal dialogs, http/https URLs only).

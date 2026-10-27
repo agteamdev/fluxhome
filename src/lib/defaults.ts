@@ -33,15 +33,15 @@ export function createDefaultData(): StorageSchema {
             id: uid(),
             title: 'Useful',
             bookmarks: [
-              mk('GitHub', 'https://github.com'),
-              mk('Wikipedia', 'https://en.wikipedia.org'),
-              mk('MDN Web Docs', 'https://developer.mozilla.org'),
+              mk('GitHub', 'https://github.com/'),
+              mk('Wikipedia', 'https://en.wikipedia.org/'),
+              mk('MDN Web Docs', 'https://developer.mozilla.org/'),
             ],
           },
           {
             id: uid(),
             title: 'News',
-            bookmarks: [mk('Hacker News', 'https://news.ycombinator.com'), mk('Reddit', 'https://www.reddit.com')],
+            bookmarks: [mk('Hacker News', 'https://news.ycombinator.com/'), mk('Reddit', 'https://www.reddit.com/')],
           },
         ],
         columns: [

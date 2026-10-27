@@ -39,7 +39,9 @@ body {
 
 #app { max-width: 1400px; margin: 0 auto; padding: 24px; }
 
-.header h1 { font-size: 28px; font-weight: 600; margin: 8px 0 24px; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 8px 0 24px; min-height: 40px; }
+.header h1 { font-size: 28px; font-weight: 600; margin: 0; }
+.header-actions { display: flex; gap: 8px; margin-left: auto; }
 
 .columns { display: grid; gap: 16px; align-items: start; }
 .column { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 140px; }
@@ -141,3 +143,17 @@ body {
 .dialog-field input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .dialog-error { margin: 0; color: #e5545f; font-size: 13px; }
 .dialog-buttons { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* Toasts */
+.toast-container {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 8px; align-items: center;
+  z-index: 1000; pointer-events: none;
+}
+.toast {
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-left: 4px solid var(--accent);
+  border-radius: 8px; padding: 10px 16px; font-size: 14px;
+  max-width: min(480px, 90vw); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+.toast.error { border-left-color: #e5545f; }

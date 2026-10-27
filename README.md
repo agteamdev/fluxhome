@@ -1,6 +1,6 @@
 # FluxHome
 
-A local-first start page (a start.me alternative) for Chromium-based browsers and Firefox.
+A local-first start page for Chromium-based browsers and Firefox.
 All data stays in your browser. No cloud, no ads, no telemetry.
 
 ## Requirements

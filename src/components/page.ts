@@ -1,5 +1,6 @@
 import { el } from './dom';
 import { renderWidget } from '@/widgets';
+import { renderBackupButtons } from './backup-actions';
 import { makeColumnDropZone } from './widget-dnd';
 import { moveWidget } from '@/lib/page-ops';
 import { updatePage } from '@/lib/page-store';
@@ -54,12 +55,9 @@ export function renderPage(root: HTMLElement, config: StorageSchema): void {
     return;
   }
 
-  if (config.settings.showGreeting) {
-    root.append(
-      el('header', { class: 'header' }, [
-        el('h1', { text: getGreeting(new Date(), config.settings.userName, config.settings.greetingByTime) }),
-      ]),
-    );
-  }
+  const greeting = config.settings.showGreeting
+    ? getGreeting(new Date(), config.settings.userName, config.settings.greetingByTime)
+    : '';
+  root.append(el('header', { class: 'header' }, [el('h1', { text: greeting }), renderBackupButtons()]));
   root.append(renderColumns(page, config.settings.columnsCount));
 }
