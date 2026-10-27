@@ -1,0 +1,79 @@
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --text: #1c2030;
+  --muted: #6b7285;
+  --accent: #5b6cff;
+  --border: #e2e5ec;
+}
+
+:root[data-theme='dark'] {
+  --bg: #14161d;
+  --surface: #1e212b;
+  --text: #e8eaf2;
+  --muted: #8d93a8;
+  --accent: #7d8bff;
+  --border: #2d3140;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='auto'] {
+    --bg: #14161d;
+    --surface: #1e212b;
+    --text: #e8eaf2;
+    --muted: #8d93a8;
+    --accent: #7d8bff;
+    --border: #2d3140;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+#app { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+.header h1 { font-size: 28px; font-weight: 600; margin: 8px 0 24px; }
+
+.columns { display: grid; gap: 16px; align-items: start; }
+.column { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.widget {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+.widget-title { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+.muted { color: var(--muted); font-size: 14px; margin: 0; }
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.tab {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.links a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 8px; border-radius: 8px;
+  color: var(--text); text-decoration: none; font-size: 14px;
+}
+.links a:hover { background: var(--bg); }
+.ico {
+  width: 22px; height: 22px; border-radius: 6px; flex: none;
+  display: grid; place-items: center;
+  background: var(--accent); color: #fff; font-size: 12px; font-weight: 600;
+}
