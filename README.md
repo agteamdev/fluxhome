@@ -15,6 +15,7 @@ npm install
 npm run build          # Chromium -> .output/chrome-mv3
 npm run build:firefox  # Firefox  -> .output/firefox-mv3
 npm run typecheck
+npm test               # unit tests (Vitest)
 ```
 
 ### Install in Brave / Chrome / Edge

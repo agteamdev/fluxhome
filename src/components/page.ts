@@ -1,5 +1,8 @@
 import { el } from './dom';
 import { renderWidget } from '@/widgets';
+import { makeColumnDropZone } from './widget-dnd';
+import { moveWidget } from '@/lib/page-ops';
+import { updatePage } from '@/lib/page-store';
 import { getGreeting } from '@/utils/greeting';
 import type { Page, Settings, StorageSchema } from '@/lib/types';
 
@@ -32,6 +35,9 @@ function renderColumns(page: Page, columnsCount: number): HTMLElement {
     const colEl = el('div', { class: 'column', attrs: { 'data-column-id': col.id } });
     const widgets = page.widgets.filter((w) => w.columnId === col.id).sort((a, b) => a.order - b.order);
     for (const w of widgets) colEl.append(renderWidget(w, page));
+    makeColumnDropZone(colEl, (widgetId, beforeId) => {
+      void updatePage(page.id, (p) => moveWidget(p, widgetId, col.id, beforeId));
+    });
     wrap.append(colEl);
   }
   return wrap;

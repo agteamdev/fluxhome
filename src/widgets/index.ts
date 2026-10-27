@@ -6,16 +6,16 @@ import { renderPlaceholder } from './placeholder';
 export function renderWidget(widget: WidgetConfig, page: Page): HTMLElement {
   switch (widget.type) {
     case 'bookmarks':
-      return renderBookmarksWidget(page);
+      return renderBookmarksWidget(widget, page);
     case 'notes':
-      return renderPlaceholder('Notes', '7');
+      return renderPlaceholder(widget, 'Notes', '7');
     case 'todos':
-      return renderPlaceholder('Todos', '7');
+      return renderPlaceholder(widget, 'Todos', '7');
     case 'clock':
-      return renderPlaceholder('Clock', '8');
+      return renderPlaceholder(widget, 'Clock', '8');
     case 'search':
-      return renderPlaceholder('Search', '8');
+      return renderPlaceholder(widget, 'Search', '8');
     case 'rss':
-      return renderPlaceholder('News (RSS)', '9');
+      return renderPlaceholder(widget, 'News (RSS)', '9');
   }
 }

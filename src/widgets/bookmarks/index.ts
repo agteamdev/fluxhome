@@ -1,51 +1,160 @@
 import { el } from '@/components/dom';
-import type { Page } from '@/lib/types';
+import { confirmDialog, openFormDialog } from '@/components/dialog';
+import { widgetFrame } from '@/components/widget-frame';
+import * as ops from '@/lib/page-ops';
+import { updatePage } from '@/lib/page-store';
+import type { Bookmark, Page, WidgetConfig } from '@/lib/types';
+import { uid } from '@/utils/id';
+import { hostnameOf, normalizeUrl } from '@/utils/url';
+import { makeBookmarkDraggable, makeBookmarkListDropZone, makeGroupTabDropZone } from './dnd';
 
-/** Bookmarks widget (stage 2: display only; CRUD arrives in stage 3). */
-export function renderBookmarksWidget(page: Page): HTMLElement {
-  const root = el('section', { class: 'widget' }, [el('h2', { class: 'widget-title', text: 'Bookmarks' })]);
+/** Remembers the selected group per widget while the page is re-rendered after edits. */
+const activeGroupByWidget = new Map<string, string>();
+
+function smallButton(text: string, label: string, onClick: () => void): HTMLButtonElement {
+  const button = el('button', { class: 'btn small', text, attrs: { type: 'button', title: label, 'aria-label': label } });
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+/** Shows the add/edit form and resolves with a validated title + URL, or null if cancelled. */
+async function askBookmark(
+  heading: string,
+  submitLabel: string,
+  initial?: Pick<Bookmark, 'title' | 'url'>,
+): Promise<{ title: string; url: string } | null> {
+  const values = await openFormDialog({
+    title: heading,
+    submitLabel,
+    fields: [
+      { name: 'url', label: 'URL', value: initial?.url ?? '', placeholder: 'https://example.com', required: true },
+      { name: 'title', label: 'Title', value: initial?.title ?? '', placeholder: 'Optional (defaults to the site name)' },
+    ],
+    validate: (v) => (normalizeUrl(v.url ?? '') ? null : 'Enter a valid http(s) URL'),
+  });
+  if (!values) return null;
+  const url = normalizeUrl(values.url ?? '')!;
+  return { url, title: values.title || hostnameOf(url) };
+}
+
+/** Bookmarks widget: groups as tabs, add/edit/delete, drag & drop. */
+export function renderBookmarksWidget(widget: WidgetConfig, page: Page): HTMLElement {
+  const addLink = smallButton('+ Link', 'Add a bookmark', () => void onAddBookmark());
+  const addGroup = smallButton('+ Group', 'Add a group', () => void onAddGroup());
+  const { root, body } = widgetFrame(widget, 'Bookmarks', [addLink, addGroup]);
 
   if (page.groups.length === 0) {
-    root.append(el('p', { class: 'muted', text: 'No groups yet' }));
+    addLink.disabled = true;
+    body.append(el('p', { class: 'muted', text: 'No groups yet. Create one with “+ Group”.' }));
     return root;
   }
 
-  const tabs = el('div', { class: 'tabs' });
-  const list = el('ul', { class: 'links' });
-  root.append(tabs, list);
+  let activeId = activeGroupByWidget.get(widget.id);
+  if (!page.groups.some((g) => g.id === activeId)) activeId = page.groups[0]!.id;
+  const activeGroup = page.groups.find((g) => g.id === activeId)!;
+  activeGroupByWidget.set(widget.id, activeGroup.id);
 
-  let activeIndex = 0;
-
-  const draw = () => {
-    tabs.replaceChildren();
-    page.groups.forEach((group, i) => {
-      const btn = el('button', {
-        class: i === activeIndex ? 'tab active' : 'tab',
-        text: group.title,
-        attrs: { type: 'button' },
-      });
-      btn.addEventListener('click', () => {
-        activeIndex = i;
-        draw();
-      });
-      tabs.append(btn);
+  // ---- actions ----
+  async function onAddGroup(): Promise<void> {
+    const values = await openFormDialog({
+      title: 'New group',
+      submitLabel: 'Create',
+      fields: [{ name: 'title', label: 'Group name', required: true }],
     });
+    if (!values) return;
+    const id = uid();
+    activeGroupByWidget.set(widget.id, id);
+    await updatePage(page.id, (p) => ops.addGroup(p, { id, title: values.title!, bookmarks: [] }));
+  }
 
-    list.replaceChildren();
-    const group = page.groups[activeIndex]!;
-    if (group.bookmarks.length === 0) {
-      list.append(el('li', { class: 'muted', text: 'This group is empty' }));
-    }
-    for (const b of group.bookmarks) {
-      const letter = (b.title.trim()[0] ?? '?').toUpperCase();
-      const a = el('a', { attrs: { href: b.url, title: b.url } }, [
-        el('span', { class: 'ico', text: letter }),
-        el('span', { text: b.title }),
-      ]);
-      list.append(el('li', {}, [a]));
-    }
-  };
+  async function onRenameGroup(): Promise<void> {
+    const values = await openFormDialog({
+      title: 'Rename group',
+      submitLabel: 'Save',
+      fields: [{ name: 'title', label: 'Group name', value: activeGroup.title, required: true }],
+    });
+    if (!values) return;
+    await updatePage(page.id, (p) => ops.renameGroup(p, activeGroup.id, values.title!));
+  }
 
-  draw();
+  async function onDeleteGroup(): Promise<void> {
+    if (activeGroup.bookmarks.length > 0) {
+      const ok = await confirmDialog({
+        title: 'Delete group?',
+        message: `“${activeGroup.title}” and its ${activeGroup.bookmarks.length} bookmark(s) will be deleted.`,
+        confirmLabel: 'Delete',
+      });
+      if (!ok) return;
+    }
+    await updatePage(page.id, (p) => ops.deleteGroup(p, activeGroup.id));
+  }
+
+  async function onAddBookmark(): Promise<void> {
+    const data = await askBookmark('New bookmark', 'Add');
+    if (!data) return;
+    const bookmark: Bookmark = { id: uid(), createdAt: Date.now(), ...data };
+    await updatePage(page.id, (p) => ops.addBookmark(p, activeGroup.id, bookmark));
+  }
+
+  async function onEditBookmark(bookmark: Bookmark): Promise<void> {
+    const data = await askBookmark('Edit bookmark', 'Save', bookmark);
+    if (!data) return;
+    await updatePage(page.id, (p) => ops.updateBookmark(p, activeGroup.id, bookmark.id, data));
+  }
+
+  // ---- group tabs ----
+  const tabs = el('div', { class: 'tabs' });
+  for (const group of page.groups) {
+    const isActive = group.id === activeGroup.id;
+    const tab = el('button', {
+      class: isActive ? 'tab active' : 'tab',
+      text: group.title,
+      attrs: { type: 'button' },
+    });
+    tab.addEventListener('click', () => {
+      activeGroupByWidget.set(widget.id, group.id);
+      // Re-render this widget only; selection is UI state and is not persisted
+      root.replaceWith(renderBookmarksWidget(widget, page));
+    });
+    makeGroupTabDropZone(tab, (payload) => {
+      void updatePage(page.id, (p) => ops.moveBookmark(p, payload.groupId, payload.bookmarkId, group.id, null));
+    });
+    tabs.append(tab);
+  }
+  tabs.append(
+    el('span', { class: 'tab-actions' }, [
+      smallButton('✎', 'Rename group', () => void onRenameGroup()),
+      smallButton('✕', 'Delete group', () => void onDeleteGroup()),
+    ]),
+  );
+
+  // ---- bookmark list ----
+  const list = el('ul', { class: 'links' });
+  if (activeGroup.bookmarks.length === 0) {
+    list.append(el('li', { class: 'muted empty', text: 'This group is empty' }));
+  }
+  for (const bookmark of activeGroup.bookmarks) {
+    const letter = (bookmark.title.trim()[0] ?? '?').toUpperCase();
+    const link = el('a', { attrs: { href: bookmark.url, title: bookmark.url, draggable: 'false' } }, [
+      el('span', { class: 'ico', text: letter }),
+      el('span', { class: 'link-title', text: bookmark.title }),
+    ]);
+    const row = el('li', { class: 'link-row', attrs: { 'data-bookmark-id': bookmark.id } }, [
+      link,
+      el('span', { class: 'row-actions' }, [
+        smallButton('✎', 'Edit bookmark', () => void onEditBookmark(bookmark)),
+        smallButton('✕', 'Delete bookmark', () => {
+          void updatePage(page.id, (p) => ops.deleteBookmark(p, activeGroup.id, bookmark.id));
+        }),
+      ]),
+    ]);
+    makeBookmarkDraggable(row, { groupId: activeGroup.id, bookmarkId: bookmark.id });
+    list.append(row);
+  }
+  makeBookmarkListDropZone(list, (payload, beforeId) => {
+    void updatePage(page.id, (p) => ops.moveBookmark(p, payload.groupId, payload.bookmarkId, activeGroup.id, beforeId));
+  });
+
+  body.append(tabs, list);
   return root;
 }
