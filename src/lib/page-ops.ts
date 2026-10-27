@@ -1,4 +1,4 @@
-import type { Bookmark, BookmarkGroup, Page, WidgetConfig } from './types';
+import type { Bookmark, BookmarkGroup, Page, WidgetConfig, WidgetType } from './types';
 import { normalizeUrl } from '@/utils/url';
 
 /**
@@ -107,4 +107,41 @@ export function findBookmarkByUrl(page: Page, url: string): { group: BookmarkGro
     if (bookmark) return { group, bookmark };
   }
   return null;
+}
+
+/** Merges new values into the props of one widget. */
+export function updateWidgetProps(page: Page, widgetId: string, props: Record<string, unknown>): Page {
+  return { ...page, widgets: page.widgets.map((w) => (w.id === widgetId ? { ...w, props: { ...w.props, ...props } } : w)) };
+}
+
+/** Adds a widget at the end of the least filled visible column (the first one on a tie). */
+export function addWidget(page: Page, type: WidgetType, id: string, columnLimit = page.columns.length): Page {
+  const columns = page.columns.slice(0, Math.max(1, columnLimit));
+  if (columns.length === 0) return page;
+  const counts = columns.map((c) => page.widgets.filter((w) => w.columnId === c.id).length);
+  const index = counts.indexOf(Math.min(...counts));
+  const widget: WidgetConfig = { id, type, columnId: columns[index]!.id, order: counts[index]!, props: {} };
+  return { ...page, widgets: [...page.widgets, widget] };
+}
+
+export function removeWidgetsOfType(page: Page, type: WidgetType): Page {
+  return { ...page, widgets: page.widgets.filter((w) => w.type !== type) };
+}
+
+/** Makes the page show exactly the wanted widget types (one widget per type). */
+export function applyWidgetSelection(
+  page: Page,
+  wanted: WidgetType[],
+  columnLimit: number,
+  newId: () => string,
+): Page {
+  const all: WidgetType[] = ['bookmarks', 'search', 'clock', 'notes', 'todos', 'rss'];
+  let result = page;
+  for (const type of all) {
+    const present = result.widgets.some((w) => w.type === type);
+    const want = wanted.includes(type);
+    if (present && !want) result = removeWidgetsOfType(result, type);
+    else if (!present && want) result = addWidget(result, type, newId(), columnLimit);
+  }
+  return result;
 }

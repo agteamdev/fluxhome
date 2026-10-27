@@ -2,6 +2,7 @@ import { el } from './dom';
 import { renderWidget, type WidgetContext } from '@/widgets';
 import { renderBackupButtons } from './backup-actions';
 import { renderSearch } from './search-bar';
+import { renderWidgetsButton } from './widgets-dialog';
 import { makeColumnDropZone } from './widget-dnd';
 import { moveWidget } from '@/lib/page-ops';
 import { updatePage } from '@/lib/page-store';
@@ -63,6 +64,6 @@ export function renderPage(root: HTMLElement, config: StorageSchema): void {
   const search = renderSearch(page, columns);
   const headerItems: HTMLElement[] = [];
   if (greeting) headerItems.push(el('h1', { text: greeting }));
-  headerItems.push(search.bar, renderBackupButtons());
+  headerItems.push(search.bar, renderBackupButtons([renderWidgetsButton(page, config.settings.columnsCount)]));
   root.append(el('header', { class: 'header' }, headerItems), search.results, columns);
 }

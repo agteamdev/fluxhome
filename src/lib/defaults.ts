@@ -51,8 +51,10 @@ export function createDefaultData(): StorageSchema {
         ],
         widgets: [
           { id: uid(), type: 'bookmarks', columnId: col1, order: 0, props: {} },
-          { id: uid(), type: 'notes', columnId: col2, order: 0, props: {} },
-          { id: uid(), type: 'todos', columnId: col3, order: 0, props: {} },
+          { id: uid(), type: 'search', columnId: col2, order: 0, props: {} },
+          { id: uid(), type: 'notes', columnId: col2, order: 1, props: {} },
+          { id: uid(), type: 'clock', columnId: col3, order: 0, props: {} },
+          { id: uid(), type: 'todos', columnId: col3, order: 1, props: {} },
         ],
       },
     ],

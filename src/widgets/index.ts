@@ -1,7 +1,9 @@
 import type { Note, Page, Todo, WidgetConfig } from '@/lib/types';
 import { renderBookmarksWidget } from './bookmarks';
+import { renderClockWidget } from './clock';
 import { renderNotesWidget } from './notes';
 import { renderPlaceholder } from './placeholder';
+import { renderSearchWidget } from './search';
 import { renderTodosWidget } from './todos';
 
 /** Everything a widget may need to render itself. */
@@ -21,9 +23,9 @@ export function renderWidget(widget: WidgetConfig, ctx: WidgetContext): HTMLElem
     case 'todos':
       return renderTodosWidget(widget, ctx.todos);
     case 'clock':
-      return renderPlaceholder(widget, 'Clock', '8');
+      return renderClockWidget(widget, ctx.page);
     case 'search':
-      return renderPlaceholder(widget, 'Search', '8');
+      return renderSearchWidget(widget, ctx.page);
     case 'rss':
       return renderPlaceholder(widget, 'News (RSS)', '9');
   }

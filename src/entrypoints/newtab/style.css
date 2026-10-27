@@ -207,3 +207,45 @@ body {
 .deadline { font-size: 12px; color: var(--muted); }
 .deadline.overdue { color: #e5545f; font-weight: 600; }
 .todo.done .badge, .todo.done .deadline { opacity: 0.5; }
+
+/* Clock */
+.clock-main { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0 8px; }
+.clock-time { font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+.clock-date { font-size: 13px; color: var(--muted); }
+.analog { width: 140px; height: 140px; }
+.analog-face { fill: var(--bg); stroke: var(--border); stroke-width: 1.5; }
+.analog-tick { stroke: var(--muted); stroke-width: 1; }
+.analog-tick.major { stroke: var(--text); stroke-width: 2; }
+.analog-hand { stroke: var(--text); stroke-linecap: round; }
+.analog-hand.hour { stroke-width: 3.5; }
+.analog-hand.minute { stroke-width: 2.5; }
+.analog-hand.second { stroke: var(--accent); stroke-width: 1.2; }
+.analog-center { fill: var(--accent); }
+.zones { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+.zone { display: flex; align-items: baseline; gap: 8px; font-size: 14px; }
+.zone-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zone-note { font-size: 11px; color: var(--muted); }
+.zone-time { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* Web search */
+.web-search { display: flex; gap: 6px; flex-wrap: wrap; }
+.web-search input, .web-search select {
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 14px; min-width: 0;
+}
+.web-search .web-search-input { flex: 1 1 100%; }
+.web-search select { flex: 1; }
+.web-search input:focus, .web-search select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+/* Widgets dialog */
+.dialog-check { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+
+/* Clock settings: world clock picker */
+.dialog-field input[type='search'] { margin-bottom: 2px; }
+.dialog-field select { max-width: 100%; }
+.zone-chips { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.zone-chip {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid var(--border); border-radius: 8px; padding: 4px 4px 4px 10px;
+  font-size: 14px; color: var(--text);
+}

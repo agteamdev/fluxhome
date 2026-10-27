@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   addBookmark,
+  addWidget,
+  applyWidgetSelection,
   addGroup,
   deleteBookmark,
   deleteGroup,
@@ -9,6 +11,7 @@ import {
   moveWidget,
   renameGroup,
   updateBookmark,
+  updateWidgetProps,
 } from './page-ops';
 import type { Page } from './types';
 
@@ -110,5 +113,32 @@ describe('findBookmarkByUrl', () => {
   });
   it('returns null when there is no match', () => {
     expect(findBookmarkByUrl(makePage(), 'https://nope.test/')).toBeNull();
+  });
+});
+
+describe('widget visibility', () => {
+  it('merges props into one widget', () => {
+    const page = updateWidgetProps(makePage(), 'w1', { a: 1 });
+    expect(page.widgets.find((w) => w.id === 'w1')!.props).toEqual({ a: 1 });
+    expect(page.widgets.find((w) => w.id === 'w2')!.props).toEqual({});
+  });
+
+  it('adds a widget to the least filled column', () => {
+    const page = addWidget(makePage(), 'clock', 'new');
+    const added = page.widgets.find((w) => w.id === 'new')!;
+    expect(added.columnId).toBe('c2'); // c1 has 2 widgets, c2 has 1
+    expect(added.order).toBe(1);
+  });
+
+  it('respects the visible column limit', () => {
+    const page = addWidget(makePage(), 'clock', 'new', 1);
+    expect(page.widgets.find((w) => w.id === 'new')!.columnId).toBe('c1');
+  });
+
+  it('applies a selection of widget types', () => {
+    let n = 0;
+    const page = applyWidgetSelection(makePage(), ['bookmarks', 'clock', 'search'], 2, () => `id${++n}`);
+    const types = page.widgets.map((w) => w.type).sort();
+    expect(types).toEqual(['bookmarks', 'clock', 'search']);
   });
 });

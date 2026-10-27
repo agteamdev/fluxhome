@@ -2,6 +2,17 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.7.1
+
+- Clock settings: world clocks are now chosen from a scrollable drop-down of the time zones the browser supports (grouped by region, with UTC offsets and a filter box) instead of typing names.
+
+## 0.7.0
+
+- Clock widget: digital or analog style, 24/12-hour format, world clocks by IANA time zone (settings via the gear button).
+- Web search widget: Brave (default), DuckDuckGo or Google.
+- "Widgets" button in the header: show or hide widgets on the page.
+- New installs start with the search and clock widgets enabled.
+
 ## 0.6.0
 
 - Notes widget: create, edit, delete and pin notes; notes are viewed as rendered Markdown (headings, lists, bold, italic, code, safe links).

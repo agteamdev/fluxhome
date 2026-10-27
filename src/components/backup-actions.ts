@@ -51,10 +51,10 @@ async function importBackup(): Promise<void> {
 }
 
 /** "Export" and "Import" buttons shown in the page header. */
-export function renderBackupButtons(): HTMLElement {
+export function renderBackupButtons(extra: HTMLElement[] = []): HTMLElement {
   const exportButton = el('button', { class: 'btn', text: 'Export', attrs: { type: 'button', title: 'Download a JSON backup' } });
   const importButton = el('button', { class: 'btn', text: 'Import', attrs: { type: 'button', title: 'Restore from a JSON backup' } });
   exportButton.addEventListener('click', () => void exportBackup());
   importButton.addEventListener('click', () => void importBackup());
-  return el('div', { class: 'header-actions' }, [exportButton, importButton]);
+  return el('div', { class: 'header-actions' }, [...extra, exportButton, importButton]);
 }
