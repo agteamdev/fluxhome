@@ -23,6 +23,8 @@ const firefoxSettings = {
 // Firefox                                  -> .output/firefox-mv3
 export default defineConfig({
   srcDir: 'src',
+  // WXT builds Firefox as Manifest V2 by default; we want Manifest V3 everywhere
+  manifestVersion: 3,
   manifest: ({ browser }) => ({
     name: 'FluxHome',
     description: 'Local-first start page: bookmarks, notes, todos. No cloud, no telemetry.',

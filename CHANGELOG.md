@@ -2,6 +2,10 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.5.1
+
+- Fix: Firefox is now built as Manifest V3 (`.output/firefox-mv3`); WXT defaults to Manifest V2 for Firefox.
+
 ## 0.5.0
 
 - Firefox: `data_collection_permissions` ("none") declared as required by addons.mozilla.org; minimum Firefox version 140.

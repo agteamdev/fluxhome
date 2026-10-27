@@ -2,22 +2,22 @@
   "name": "fluxhome",
   "description": "FluxHome — a local-first start page (new tab) with no cloud and no telemetry",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
-    "dev:firefox": "wxt -b firefox",
+    "dev:firefox": "wxt -b firefox --mv3",
     "build": "wxt build",
-    "build:firefox": "wxt build -b firefox",
+    "build:firefox": "wxt build -b firefox --mv3",
     "zip": "wxt zip",
-    "zip:firefox": "wxt zip -b firefox",
+    "zip:firefox": "wxt zip -b firefox --mv3",
     "typecheck": "tsc --noEmit",
     "postinstall": "wxt prepare",
     "test": "vitest run",
     "lint": "eslint .",
-    "lint:firefox": "wxt build -b firefox && npx --yes web-ext lint --source-dir .output/firefox-mv3",
+    "lint:firefox": "npm run build:firefox && npx --yes web-ext lint --source-dir .output/firefox-mv3",
     "check": "node scripts/check-build.mjs",
-    "verify": "npm run lint && npm run typecheck && npm test && wxt build && wxt build -b firefox && npm run check"
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build && npm run build:firefox && npm run check"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
