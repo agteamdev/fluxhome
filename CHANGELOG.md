@@ -2,6 +2,13 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.5.0
+
+- Firefox: `data_collection_permissions` ("none") declared as required by addons.mozilla.org; minimum Firefox version 140.
+- ESLint with project rules (no `chrome.*` globals, no eval, no HTML string assignment).
+- `npm run check` validates the built manifests; `npm run lint:firefox` runs `web-ext lint`; `npm run verify` runs everything.
+- Testing guide with a manual checklist (`docs/TESTING.md`).
+
 ## 0.4.0
 
 - Search: instant filtering of all bookmarks on the page (title, URL, tags, group name). Press `/` to focus, `Enter` opens the first result, `Esc` clears.

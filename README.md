@@ -16,7 +16,11 @@ npm run build          # Chromium -> .output/chrome-mv3
 npm run build:firefox  # Firefox  -> .output/firefox-mv3
 npm run typecheck
 npm test               # unit tests (Vitest)
+npm run lint           # ESLint
+npm run verify         # lint + typecheck + tests + both builds + build checks
 ```
+
+See [docs/TESTING.md](docs/TESTING.md) for the manual checklist.
 
 ### Install in Brave / Chrome / Edge
 
@@ -28,6 +32,8 @@ npm test               # unit tests (Vitest)
 
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Click **Load Temporary Add-on** and select `.output/firefox-mv3/manifest.json`.
+
+Requires Firefox 140 or newer. Firefox for Android does not support new tab overrides and is not a target.
 
 ## Project structure
 
