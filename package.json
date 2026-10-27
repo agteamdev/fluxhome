@@ -2,7 +2,7 @@
   "name": "fluxhome",
   "description": "FluxHome — a local-first start page (new tab) with no cloud and no telemetry",
   "private": true,
-  "version": "0.5.1",
+  "version": "0.6.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -27,5 +27,6 @@
     "typescript-eslint": "^8.0.0",
     "vitest": "^3.0.0",
     "wxt": "^0.20.0"
-  }
+  },
+  "license": "MIT"
 }

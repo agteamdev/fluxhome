@@ -48,3 +48,7 @@ Requires Firefox 140 or newer. Firefox for Android does not support new tab over
 ## Versioning
 
 [Semantic Versioning](https://semver.org). See [CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+[MIT](LICENSE)

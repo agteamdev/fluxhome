@@ -2,6 +2,13 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.6.0
+
+- Notes widget: create, edit, delete and pin notes; notes are viewed as rendered Markdown (headings, lists, bold, italic, code, safe links).
+- Todos widget: quick-add row, checkboxes, priorities, deadlines (overdue highlighted), edit, delete, "Clear done".
+- Dialogs support multi-line text, date and select fields.
+- Added the MIT license.
+
 ## 0.5.1
 
 - Fix: Firefox is now built as Manifest V3 (`.output/firefox-mv3`); WXT defaults to Manifest V2 for Firefox.

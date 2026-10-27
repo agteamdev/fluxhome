@@ -15,6 +15,6 @@ registerSearchShortcut();
 refresh();
 
 // Re-render when data changes (another tab, import, etc.)
-for (const key of ['settings', 'pages', 'activePageId'] as const) {
+for (const key of ['settings', 'pages', 'activePageId', 'notes', 'todos'] as const) {
   storage.watch(key, () => void refresh());
 }
