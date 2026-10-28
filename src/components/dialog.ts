@@ -1,4 +1,6 @@
+import { createDatePicker } from './date-picker';
 import { el } from './dom';
+import { createSelect } from './select';
 
 export interface FormField {
   name: string;
@@ -6,12 +8,12 @@ export interface FormField {
   value?: string;
   placeholder?: string;
   required?: boolean;
-  /** Input type for single-line fields (default "text"). */
+  /** "date" shows a calendar drop-down (value format YYYY-MM-DD). */
   type?: 'text' | 'date';
   /** Renders a multi-line <textarea>. */
   multiline?: boolean;
   rows?: number;
-  /** Renders a <select> with these options. */
+  /** Shows a drop-down with these options. */
   options?: { value: string; label: string }[];
 }
 
@@ -23,27 +25,35 @@ export interface FormDialogOptions {
   validate?: (values: Record<string, string>) => string | null;
 }
 
-type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+/** A form control: the element to show and a way to read its value. */
+interface Control {
+  element: HTMLElement;
+  getValue: () => string;
+}
 
 function createControl(field: FormField): Control {
   if (field.options) {
-    const select = el('select', { attrs: { name: field.name } });
-    for (const option of field.options) {
-      select.append(el('option', { text: option.label, attrs: { value: option.value } }));
-    }
-    select.value = field.value ?? field.options[0]!.value;
-    return select;
+    const select = createSelect({
+      items: field.options,
+      value: field.value ?? field.options[0]!.value,
+      ariaLabel: field.label,
+    });
+    return { element: select.element, getValue: () => select.value };
+  }
+  if (field.type === 'date') {
+    const picker = createDatePicker({ value: field.value ?? '', placeholder: field.placeholder ?? 'No date', ariaLabel: field.label });
+    return { element: picker.element, getValue: () => picker.value };
   }
   if (field.multiline) {
     const area = el('textarea', { attrs: { name: field.name, rows: String(field.rows ?? 8) } });
     area.value = field.value ?? '';
     if (field.placeholder) area.placeholder = field.placeholder;
-    return area;
+    return { element: area, getValue: () => area.value };
   }
-  const input = el('input', { attrs: { type: field.type ?? 'text', name: field.name, autocomplete: 'off' } });
+  const input = el('input', { attrs: { type: 'text', name: field.name, autocomplete: 'off' } });
   input.value = field.value ?? '';
   if (field.placeholder) input.placeholder = field.placeholder;
-  return input;
+  return { element: input, getValue: () => input.value };
 }
 
 /** Shows a modal form. Resolves with the (trimmed) values, or null when cancelled. */
@@ -59,7 +69,7 @@ export function openFormDialog(options: FormDialogOptions): Promise<Record<strin
     for (const field of options.fields) {
       const control = createControl(field);
       controls.set(field.name, control);
-      form.append(el('label', { class: 'dialog-field' }, [el('span', { text: field.label }), control]));
+      form.append(el('label', { class: 'dialog-field' }, [el('span', { text: field.label }), control.element]));
     }
 
     const cancel = el('button', { class: 'btn', text: 'Cancel', attrs: { type: 'button' } });
@@ -72,7 +82,7 @@ export function openFormDialog(options: FormDialogOptions): Promise<Record<strin
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       const values: Record<string, string> = {};
-      for (const [name, control] of controls) values[name] = control.value.trim();
+      for (const [name, control] of controls) values[name] = control.getValue().trim();
 
       let message: string | null = null;
       for (const field of options.fields) {

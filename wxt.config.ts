@@ -30,6 +30,14 @@ export default defineConfig({
     description: 'Local-first start page: bookmarks, notes, todos. No cloud, no telemetry.',
     permissions: ['storage', 'tabs', 'contextMenus', 'bookmarks', 'alarms'],
     host_permissions: ['<all_urls>'],
+    // Listed explicitly (files live in public/icons) instead of relying on automatic detection
+    icons: {
+      16: 'icons/16.png',
+      32: 'icons/32.png',
+      48: 'icons/48.png',
+      96: 'icons/96.png',
+      128: 'icons/128.png',
+    },
     ...(browser === 'firefox' ? firefoxSettings : {}),
   }),
 });

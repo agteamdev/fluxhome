@@ -90,3 +90,60 @@ export function makeGroupTabDropZone(tab: HTMLElement, onDrop: (payload: Bookmar
     if (payload) onDrop(payload);
   });
 }
+
+/** Custom MIME type for dragging a group tab (reordering tabs). */
+export const GROUP_MIME = 'application/x-fluxhome-group';
+
+const hasGroupType = (event: DragEvent): boolean =>
+  event.dataTransfer ? Array.from(event.dataTransfer.types).includes(GROUP_MIME) : false;
+
+/** Makes a group tab draggable (it must not be a <button>: Firefox cannot drag buttons). */
+export function makeGroupTabDraggable(tab: HTMLElement, groupId: string): void {
+  tab.draggable = true;
+  tab.addEventListener('dragstart', (event) => {
+    if (!event.dataTransfer) return;
+    event.dataTransfer.setData(GROUP_MIME, groupId);
+    event.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => tab.classList.add('dragging'), 0);
+  });
+  tab.addEventListener('dragend', () => tab.classList.remove('dragging'));
+}
+
+/**
+ * Turns the row of tabs into a drop zone for reordering.
+ * `onDrop` receives the dragged group id and the id of the tab to insert before (null = end).
+ */
+export function makeTabListDropZone(list: HTMLElement, onDrop: (groupId: string, beforeGroupId: string | null) => void): void {
+  const indicator = el('span', { class: 'tab-drop-indicator' });
+
+  // Tabs can wrap onto several rows: a tab is "after the cursor" when the cursor is above its row,
+  // or on its row and left of its middle.
+  const findNext = (x: number, y: number): HTMLElement | null => {
+    const tabs = list.querySelectorAll<HTMLElement>(':scope > .tab:not(.dragging)');
+    for (const tab of tabs) {
+      const rect = tab.getBoundingClientRect();
+      if (y < rect.top || (y <= rect.bottom && x < rect.left + rect.width / 2)) return tab;
+    }
+    return null;
+  };
+
+  list.addEventListener('dragover', (event) => {
+    if (!hasGroupType(event)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    list.insertBefore(indicator, findNext(event.clientX, event.clientY));
+  });
+
+  list.addEventListener('dragleave', (event) => {
+    if (!list.contains(event.relatedTarget as Node | null)) indicator.remove();
+  });
+
+  list.addEventListener('drop', (event) => {
+    if (!hasGroupType(event)) return;
+    event.preventDefault();
+    const groupId = event.dataTransfer?.getData(GROUP_MIME);
+    const before = findNext(event.clientX, event.clientY)?.dataset.groupId ?? null;
+    indicator.remove();
+    if (groupId) onDrop(groupId, before);
+  });
+}

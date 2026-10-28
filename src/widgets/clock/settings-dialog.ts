@@ -1,18 +1,19 @@
 import { el } from '@/components/dom';
+import { createSelect, type SelectItem } from '@/components/select';
 import {
   filterZones,
-  groupZones,
   listTimeZones,
   MAX_ZONES,
   zoneLabel,
   zoneOffsetLabel,
+  zoneRegion,
   type ClockOptions,
 } from '@/lib/clock';
 
 /**
  * Clock settings dialog: style, time format and a world clock picker.
- * The picker is a scrollable drop-down grouped by region with a filter box;
- * it only offers time zones the browser supports, so every choice works.
+ * The picker is a scrollable drop-down in the extension design, grouped by region, with a filter box.
+ * It only offers time zones the browser supports, so every choice works.
  * Resolves with the new options, or null when cancelled.
  */
 export function openClockSettings(current: ClockOptions): Promise<ClockOptions | null> {
@@ -30,52 +31,59 @@ export function openClockSettings(current: ClockOptions): Promise<ClockOptions |
 
     const dialog = el('dialog', { class: 'dialog' });
     const form = el('form', { class: 'dialog-form' });
-
-    const select = (label: string, name: string, value: string, options: { value: string; label: string }[]) => {
-      const control = el('select', { attrs: { name } });
-      for (const o of options) control.append(el('option', { text: o.label, attrs: { value: o.value } }));
-      control.value = value;
-      form.append(el('label', { class: 'dialog-field' }, [el('span', { text: label }), control]));
-      return control;
-    };
-
     form.append(el('h3', { class: 'dialog-title', text: 'Clock settings' }));
-    const mode = select('Style', 'mode', current.mode, [
-      { value: 'digital', label: 'Digital' },
-      { value: 'analog', label: 'Analog' },
-    ]);
-    const format = select('Time format', 'format', current.hour12 ? '12' : '24', [
-      { value: '24', label: '24-hour' },
-      { value: '12', label: '12-hour (AM/PM)' },
-    ]);
+
+    const mode = createSelect({
+      ariaLabel: 'Style',
+      value: current.mode,
+      items: [
+        { value: 'digital', label: 'Digital' },
+        { value: 'analog', label: 'Analog' },
+      ],
+    });
+    const format = createSelect({
+      ariaLabel: 'Time format',
+      value: current.hour12 ? '12' : '24',
+      items: [
+        { value: '24', label: '24-hour' },
+        { value: '12', label: '12-hour (AM/PM)' },
+      ],
+    });
+    form.append(
+      el('label', { class: 'dialog-field' }, [el('span', { text: 'Style' }), mode.element]),
+      el('label', { class: 'dialog-field' }, [el('span', { text: 'Time format' }), format.element]),
+    );
 
     // ---- world clocks ----
-    const filter = el('input', {
-      attrs: { type: 'search', placeholder: 'Filter, e.g. “new york”', autocomplete: 'off', 'aria-label': 'Filter time zones' },
-    });
-    const picker = el('select', { attrs: { 'aria-label': 'Add a time zone' } });
     const counter = el('span', { class: 'muted' });
     const chips = el('ul', { class: 'zone-chips' });
 
-    const fillPicker = (): void => {
-      picker.replaceChildren(el('option', { text: 'Add a time zone…', attrs: { value: '' } }));
-      const matches = filterZones(allZones, filter.value).filter((z) => !zones.includes(z));
-      if (matches.length === 0) {
-        picker.append(el('option', { text: 'No matching time zones', attrs: { value: '', disabled: '' } }));
-      }
-      for (const group of groupZones(matches)) {
-        const optgroup = el('optgroup', { attrs: { label: group.region } });
-        for (const zone of group.zones) {
-          optgroup.append(el('option', { text: describe(zone), attrs: { value: zone, title: zone } }));
-        }
-        picker.append(optgroup);
-      }
-      picker.value = '';
-      picker.disabled = zones.length >= MAX_ZONES;
-    };
+    const zoneItems = (): SelectItem[] =>
+      allZones
+        .filter((zone) => !zones.includes(zone))
+        .map((zone) => ({ value: zone, label: describe(zone), group: zoneRegion(zone), title: zone }));
 
-    const renderChips = (): void => {
+    const picker = createSelect({
+      ariaLabel: 'Add a time zone',
+      placeholder: 'Add a time zone…',
+      searchable: true,
+      searchPlaceholder: 'Filter, e.g. “new york”',
+      resetAfterSelect: true,
+      items: zoneItems(),
+      // Match on the zone name ("America/New_York"), not on the label, so "new york" and "kiev" work
+      filter: (query, item) => filterZones([item.value], query).length > 0,
+      onChange: (zone) => {
+        if (!zone || zones.length >= MAX_ZONES || zones.includes(zone)) return;
+        zones.push(zone);
+        refresh();
+      },
+    });
+
+    const refresh = (): void => {
       counter.textContent = `${zones.length} of ${MAX_ZONES}`;
+      picker.setItems(zoneItems());
+      picker.disabled = zones.length >= MAX_ZONES;
+
       if (zones.length === 0) {
         chips.replaceChildren(el('li', { class: 'muted', text: 'No world clocks yet' }));
         return;
@@ -89,40 +97,15 @@ export function openClockSettings(current: ClockOptions): Promise<ClockOptions |
           });
           remove.addEventListener('click', () => {
             zones = zones.filter((z) => z !== zone);
-            renderChips();
-            fillPicker();
+            refresh();
           });
           return el('li', { class: 'zone-chip' }, [el('span', { text: describe(zone), attrs: { title: zone } }), remove]);
         }),
       );
     };
 
-    const addZone = (zone: string): void => {
-      if (!zone || zones.length >= MAX_ZONES || zones.includes(zone)) return;
-      zones.push(zone);
-      renderChips();
-      fillPicker();
-    };
-
-    filter.addEventListener('input', fillPicker);
-    // Enter in the filter box adds the first match instead of submitting the form
-    filter.addEventListener('keydown', (event) => {
-      if (event.key !== 'Enter') return;
-      event.preventDefault();
-      addZone(picker.querySelector<HTMLOptionElement>('optgroup option')?.value ?? '');
-    });
-    picker.addEventListener('change', () => addZone(picker.value));
-
-    form.append(
-      el('div', { class: 'dialog-field' }, [
-        el('span', {}, ['World clocks ', counter]),
-        filter,
-        picker,
-        chips,
-      ]),
-    );
-    renderChips();
-    fillPicker();
+    form.append(el('div', { class: 'dialog-field' }, [el('span', {}, ['World clocks ', counter]), picker.element, chips]));
+    refresh();
 
     const cancel = el('button', { class: 'btn', text: 'Cancel', attrs: { type: 'button' } });
     const save = el('button', { class: 'btn primary', text: 'Save', attrs: { type: 'submit' } });

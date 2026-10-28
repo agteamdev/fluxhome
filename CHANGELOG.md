@@ -2,6 +2,17 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.8.1
+
+- Fix: icons are now in `public/icons` (the project root), the folder WXT copies into the build. Before, they were missing from the extension and Chromium refused to load the manifest.
+
+## 0.8.0
+
+- Logo and extension icons (16, 32, 48, 96, 128); icons are now listed explicitly in the manifest.
+- Bookmark group tabs can be dragged to change their order.
+- Fix: the edit/delete buttons of the groups no longer jump below the tabs.
+- Drop-downs and the date picker now use the extension design (own components instead of the browser's native popups): priority, search engine, clock settings, task deadline, time zone picker.
+
 ## 0.7.1
 
 - Clock settings: world clocks are now chosen from a scrollable drop-down of the time zones the browser supports (grouped by region, with UTC offsets and a filter box) instead of typing names.

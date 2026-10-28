@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.png" alt="FluxHome logo" width="128"></p>
+
 # FluxHome
 
 A local-first start page for Chromium-based browsers and Firefox.
@@ -43,7 +45,7 @@ Requires Firefox 140 or newer. Firefox for Android does not support new tab over
 - `src/components/` — shared UI components
 - `src/assets/` — shared styles
 - `src/utils/` — helpers
-- `src/public/icons/` — extension icons (16/32/48/128)
+- `public/icons/` — extension icons (16/32/48/96/128), copied into the build as-is
 
 ## Versioning
 

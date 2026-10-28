@@ -6,7 +6,13 @@ import { updatePage } from '@/lib/page-store';
 import type { Bookmark, Page, WidgetConfig } from '@/lib/types';
 import { uid } from '@/utils/id';
 import { hostnameOf, normalizeUrl } from '@/utils/url';
-import { makeBookmarkDraggable, makeBookmarkListDropZone, makeGroupTabDropZone } from './dnd';
+import {
+  makeBookmarkDraggable,
+  makeBookmarkListDropZone,
+  makeGroupTabDraggable,
+  makeGroupTabDropZone,
+  makeTabListDropZone,
+} from './dnd';
 
 /** Remembers the selected group per widget while the page is re-rendered after edits. */
 const activeGroupByWidget = new Map<string, string>();
@@ -103,30 +109,45 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page): HTMLEle
   }
 
   // ---- group tabs ----
-  const tabs = el('div', { class: 'tabs' });
+  // The action buttons live outside the (wrapping) tab list, so they always stay in the top right corner
+  const tabList = el('div', { class: 'tab-list', attrs: { role: 'tablist' } });
   for (const group of page.groups) {
     const isActive = group.id === activeGroup.id;
-    const tab = el('button', {
+    // A <span>, not a <button>: Firefox cannot drag buttons
+    const tab = el('span', {
       class: isActive ? 'tab active' : 'tab',
       text: group.title,
-      attrs: { type: 'button' },
+      attrs: { role: 'tab', tabindex: '0', 'aria-selected': String(isActive), 'data-group-id': group.id, title: 'Drag to reorder' },
     });
-    tab.addEventListener('click', () => {
+    const select = (): void => {
       activeGroupByWidget.set(widget.id, group.id);
       // Re-render this widget only; selection is UI state and is not persisted
       root.replaceWith(renderBookmarksWidget(widget, page));
+    };
+    tab.addEventListener('click', select);
+    tab.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        select();
+      }
     });
+    makeGroupTabDraggable(tab, group.id);
     makeGroupTabDropZone(tab, (payload) => {
       void updatePage(page.id, (p) => ops.moveBookmark(p, payload.groupId, payload.bookmarkId, group.id, null));
     });
-    tabs.append(tab);
+    tabList.append(tab);
   }
-  tabs.append(
+  makeTabListDropZone(tabList, (groupId, beforeId) => {
+    void updatePage(page.id, (p) => ops.moveGroup(p, groupId, beforeId));
+  });
+
+  const tabs = el('div', { class: 'tabs' }, [
+    tabList,
     el('span', { class: 'tab-actions' }, [
       smallButton('✎', 'Rename group', () => void onRenameGroup()),
       smallButton('✕', 'Delete group', () => void onDeleteGroup()),
     ]),
-  );
+  ]);
 
   // ---- bookmark list ----
   const list = el('ul', { class: 'links' });

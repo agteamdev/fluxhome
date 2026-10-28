@@ -145,3 +145,16 @@ export function applyWidgetSelection(
   }
   return result;
 }
+
+/**
+ * Moves a group (tab) to another position.
+ * `beforeGroupId` is the group it is inserted in front of; null means "to the end".
+ */
+export function moveGroup(page: Page, groupId: string, beforeGroupId: string | null): Page {
+  const moved = page.groups.find((g) => g.id === groupId);
+  if (!moved) return page;
+  const rest = page.groups.filter((g) => g.id !== groupId);
+  const index = beforeGroupId === null ? -1 : rest.findIndex((g) => g.id === beforeGroupId);
+  rest.splice(index === -1 ? rest.length : index, 0, moved);
+  return { ...page, groups: rest };
+}

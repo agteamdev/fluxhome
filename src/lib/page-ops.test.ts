@@ -8,6 +8,7 @@ import {
   deleteGroup,
   findBookmarkByUrl,
   moveBookmark,
+  moveGroup,
   moveWidget,
   renameGroup,
   updateBookmark,
@@ -140,5 +141,20 @@ describe('widget visibility', () => {
     const page = applyWidgetSelection(makePage(), ['bookmarks', 'clock', 'search'], 2, () => `id${++n}`);
     const types = page.widgets.map((w) => w.type).sort();
     expect(types).toEqual(['bookmarks', 'clock', 'search']);
+  });
+});
+
+describe('moveGroup', () => {
+  const order = (page: Page) => page.groups.map((g) => g.id);
+  it('moves a group in front of another', () => {
+    const page = addGroup(makePage(), { id: 'g3', title: 'Three', bookmarks: [] });
+    expect(order(moveGroup(page, 'g3', 'g1'))).toEqual(['g3', 'g1', 'g2']);
+  });
+  it('moves a group to the end', () => {
+    expect(order(moveGroup(makePage(), 'g1', null))).toEqual(['g2', 'g1']);
+  });
+  it('ignores unknown groups', () => {
+    const page = makePage();
+    expect(moveGroup(page, 'nope', null)).toBe(page);
   });
 });

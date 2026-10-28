@@ -1,4 +1,5 @@
 import { el } from '@/components/dom';
+import { createSelect } from '@/components/select';
 import { widgetFrame } from '@/components/widget-frame';
 import * as ops from '@/lib/page-ops';
 import { updatePage } from '@/lib/page-store';
@@ -18,14 +19,18 @@ export function renderSearchWidget(widget: WidgetConfig, page: Page): HTMLElemen
   });
   input.value = drafts.get(widget.id) ?? '';
 
-  const select = el('select', { attrs: { 'aria-label': 'Search engine' } });
-  for (const engine of SEARCH_ENGINES) {
-    select.append(el('option', { text: engine.name, attrs: { value: engine.id } }));
-  }
-  select.value = parseEngine(widget.props.engine);
+  const select = createSelect({
+    items: SEARCH_ENGINES.map((e) => ({ value: e.id, label: e.name })),
+    value: parseEngine(widget.props.engine),
+    ariaLabel: 'Search engine',
+    onChange: (engine) => {
+      drafts.set(widget.id, input.value);
+      void updatePage(page.id, (p) => ops.updateWidgetProps(p, widget.id, { engine }));
+    },
+  });
 
   const button = el('button', { class: 'btn primary small', text: 'Search', attrs: { type: 'submit' } });
-  const form = el('form', { class: 'web-search' }, [input, select, button]);
+  const form = el('form', { class: 'web-search' }, [input, select.element, button]);
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -33,11 +38,6 @@ export function renderSearchWidget(widget: WidgetConfig, page: Page): HTMLElemen
     if (!url) return;
     drafts.delete(widget.id);
     window.location.href = url;
-  });
-
-  select.addEventListener('change', () => {
-    drafts.set(widget.id, input.value);
-    void updatePage(page.id, (p) => ops.updateWidgetProps(p, widget.id, { engine: select.value }));
   });
 
   body.append(form);

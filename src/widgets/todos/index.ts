@@ -1,4 +1,6 @@
+import { createDatePicker } from '@/components/date-picker';
 import { el } from '@/components/dom';
+import { createSelect } from '@/components/select';
 import { openFormDialog } from '@/components/dialog';
 import { widgetFrame } from '@/components/widget-frame';
 import { updateTodos } from '@/lib/list-store';
@@ -37,21 +39,17 @@ export function renderTodosWidget(widget: WidgetConfig, todos: Todo[]): HTMLElem
     class: 'todo-input',
     attrs: { type: 'text', placeholder: 'Add a task…', autocomplete: 'off', 'aria-label': 'New task' },
   });
-  const prioritySelect = el('select', { attrs: { 'aria-label': 'Priority' } });
-  for (const option of PRIORITY_OPTIONS) {
-    prioritySelect.append(el('option', { text: option.label, attrs: { value: option.value } }));
-  }
-  prioritySelect.value = 'medium';
-  const dateInput = el('input', { attrs: { type: 'date', 'aria-label': 'Deadline' } });
+  const prioritySelect = createSelect({ items: PRIORITY_OPTIONS, value: 'medium', ariaLabel: 'Priority' });
+  const datePicker = createDatePicker({ placeholder: 'No deadline', ariaLabel: 'Deadline' });
   const addButton = el('button', { class: 'btn primary small', text: 'Add', attrs: { type: 'submit' } });
 
-  const form = el('form', { class: 'todo-add' }, [textInput, prioritySelect, dateInput, addButton]);
+  const form = el('form', { class: 'todo-add' }, [textInput, el('div', { class: 'todo-add-row' }, [prioritySelect.element, datePicker.element, addButton])]);
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const text = textInput.value.trim();
     if (!text) return;
     const todo: Todo = { id: uid(), text, done: false, priority: prioritySelect.value as Priority };
-    const deadline = parseDateInput(dateInput.value);
+    const deadline = parseDateInput(datePicker.value);
     if (deadline !== undefined) todo.deadline = deadline;
     refocus.add(widget.id);
     void updateTodos((list) => addTodo(list, todo));
