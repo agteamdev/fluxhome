@@ -16,7 +16,7 @@ export function toggleTodo(todos: Todo[], id: string): Todo[] {
 export function updateTodo(
   todos: Todo[],
   id: string,
-  changes: Partial<Pick<Todo, 'text' | 'priority' | 'deadline'>>,
+  changes: Partial<Pick<Todo, 'text' | 'priority' | 'deadline' | 'hasTime'>>,
 ): Todo[] {
   return todos.map((t) => (t.id === id ? { ...t, ...changes } : t));
 }
@@ -40,7 +40,11 @@ export function sortTodos(todos: Todo[]): Todo[] {
   });
 }
 
-/** A task is overdue when its deadline day is before today and it is not done. */
+/**
+ * A task is overdue when it is not done and its deadline has passed:
+ * with a time, from that exact moment; without a time, once the deadline day is over.
+ */
 export function isOverdue(todo: Todo, now: number): boolean {
-  return !todo.done && todo.deadline !== undefined && todo.deadline < startOfDay(now);
+  if (todo.done || todo.deadline === undefined) return false;
+  return todo.hasTime ? todo.deadline < now : todo.deadline < startOfDay(now);
 }

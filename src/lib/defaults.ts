@@ -1,8 +1,17 @@
 import { SCHEMA_VERSION, type StorageSchema } from './types';
 import { uid } from '@/utils/id';
 
+/** Names of the example page and groups (translated by the caller). */
+export interface DefaultLabels {
+  page: string;
+  groupUseful: string;
+  groupNews: string;
+}
+
+const ENGLISH: DefaultLabels = { page: 'Home', groupUseful: 'Useful', groupNews: 'News' };
+
 /** First-run data: one page, three columns, a few example bookmarks. */
-export function createDefaultData(): StorageSchema {
+export function createDefaultData(labels: DefaultLabels = ENGLISH): StorageSchema {
   const now = Date.now();
   const col1 = uid();
   const col2 = uid();
@@ -20,6 +29,11 @@ export function createDefaultData(): StorageSchema {
       userName: '',
       greetingByTime: true,
       columnsCount: 3,
+      language: 'auto',
+      showWebSearch: true,
+      searchEngine: 'brave',
+      cardOpacity: 1,
+      siteIcons: false,
     },
     activePageId: pageId,
     notes: [],
@@ -27,20 +41,20 @@ export function createDefaultData(): StorageSchema {
     pages: [
       {
         id: pageId,
-        title: 'Home',
+        title: labels.page,
         groups: [
           {
             id: uid(),
-            title: 'Useful',
+            title: labels.groupUseful,
             bookmarks: [
               mk('GitHub', 'https://github.com/'),
-              mk('Wikipedia', 'https://en.wikipedia.org/'),
+              mk('Wikipedia', 'https://www.wikipedia.org/'),
               mk('MDN Web Docs', 'https://developer.mozilla.org/'),
             ],
           },
           {
             id: uid(),
-            title: 'News',
+            title: labels.groupNews,
             bookmarks: [mk('Hacker News', 'https://news.ycombinator.com/'), mk('Reddit', 'https://www.reddit.com/')],
           },
         ],
@@ -51,8 +65,7 @@ export function createDefaultData(): StorageSchema {
         ],
         widgets: [
           { id: uid(), type: 'bookmarks', columnId: col1, order: 0, props: {} },
-          { id: uid(), type: 'search', columnId: col2, order: 0, props: {} },
-          { id: uid(), type: 'notes', columnId: col2, order: 1, props: {} },
+          { id: uid(), type: 'notes', columnId: col2, order: 0, props: {} },
           { id: uid(), type: 'clock', columnId: col3, order: 0, props: {} },
           { id: uid(), type: 'todos', columnId: col3, order: 1, props: {} },
         ],

@@ -2,6 +2,7 @@ import { el } from '@/components/dom';
 import { confirmDialog, openContentDialog, openFormDialog } from '@/components/dialog';
 import { renderMarkdown } from '@/components/markdown-view';
 import { widgetFrame } from '@/components/widget-frame';
+import { t } from '@/lib/i18n';
 import { updateNotes } from '@/lib/list-store';
 import { addNote, deleteNote, deriveTitle, notePreview, sortNotes, togglePin, updateNote } from '@/lib/notes-ops';
 import type { Note, WidgetConfig } from '@/lib/types';
@@ -19,30 +20,30 @@ async function askNote(heading: string, submitLabel: string, initial?: Note): Pr
     title: heading,
     submitLabel,
     fields: [
-      { name: 'title', label: 'Title', value: initial?.title ?? '', placeholder: 'Optional (defaults to the first line)' },
+      { name: 'title', label: t('note.titleLabel'), value: initial?.title ?? '', placeholder: t('note.titleHint') },
       {
         name: 'content',
-        label: 'Text (Markdown supported)',
+        label: t('note.textLabel'),
         value: initial?.content ?? '',
         multiline: true,
         rows: 10,
         placeholder: '# Heading\n- list item\n**bold**, *italic*, `code`, [link](https://example.com)',
       },
     ],
-    validate: (v) => (!v.title && !v.content ? 'Write a title or some text' : null),
+    validate: (v) => (!v.title && !v.content ? t('note.needContent') : null),
   });
   if (!values) return null;
   const content = values.content ?? '';
-  return { title: values.title || deriveTitle(content), content };
+  return { title: values.title || deriveTitle(content, t('note.untitled')), content };
 }
 
-/** Notes widget: list of notes, view (rendered Markdown), edit, pin, delete. */
+/** Notes widget: list of notes, view (rendered Markdown), edit, pin, delete. Row buttons appear on hover. */
 export function renderNotesWidget(widget: WidgetConfig, notes: Note[]): HTMLElement {
-  const addButton = smallButton('+ Note', 'Add a note', () => void onAdd());
-  const { root, body } = widgetFrame(widget, 'Notes', [addButton]);
+  const addButton = smallButton(t('note.add'), t('note.addTip'), () => void onAdd());
+  const { root, body } = widgetFrame(widget, t('note.title'), [addButton]);
 
   async function onAdd(): Promise<void> {
-    const data = await askNote('New note', 'Save');
+    const data = await askNote(t('note.new'), t('common.save'));
     if (!data) return;
     const now = Date.now();
     const note: Note = { id: uid(), pinned: false, createdAt: now, updatedAt: now, ...data };
@@ -50,7 +51,7 @@ export function renderNotesWidget(widget: WidgetConfig, notes: Note[]): HTMLElem
   }
 
   async function onEdit(note: Note): Promise<void> {
-    const data = await askNote('Edit note', 'Save', note);
+    const data = await askNote(t('note.edit'), t('common.save'), note);
     if (!data) return;
     await updateNotes((list) => updateNote(list, note.id, data, Date.now()));
   }
@@ -59,22 +60,22 @@ export function renderNotesWidget(widget: WidgetConfig, notes: Note[]): HTMLElem
     const action = await openContentDialog({
       title: note.title,
       content: renderMarkdown(note.content),
-      actions: [{ label: 'Edit', value: 'edit', variant: 'primary' }],
+      actions: [{ label: t('common.edit'), value: 'edit', variant: 'primary' }],
     });
     if (action === 'edit') await onEdit(note);
   }
 
   async function onDelete(note: Note): Promise<void> {
     const ok = await confirmDialog({
-      title: 'Delete note?',
-      message: `“${note.title}” will be deleted.`,
-      confirmLabel: 'Delete',
+      title: t('note.deleteTitle'),
+      message: t('note.deleteMessage', { title: note.title }),
+      confirmLabel: t('common.delete'),
     });
     if (ok) await updateNotes((list) => deleteNote(list, note.id));
   }
 
   if (notes.length === 0) {
-    body.append(el('p', { class: 'muted', text: 'No notes yet. Click “+ Note”.' }));
+    body.append(el('p', { class: 'muted', text: t('note.empty') }));
     return root;
   }
 
@@ -86,17 +87,18 @@ export function renderNotesWidget(widget: WidgetConfig, notes: Note[]): HTMLElem
     ]);
     main.addEventListener('click', () => void onOpen(note));
 
-    const pin = smallButton(note.pinned ? '★' : '☆', note.pinned ? 'Unpin note' : 'Pin note', () => {
-      void updateNotes((l) => togglePin(l, note.id));
-    });
-    if (note.pinned) pin.classList.add('on');
-
-    list.append(
-      el('li', { class: 'note-row' }, [
-        main,
-        el('span', { class: 'row-actions always' }, [pin, smallButton('✕', 'Delete note', () => void onDelete(note))]),
+    const children: HTMLElement[] = [main];
+    // A pinned note keeps a visible star; all buttons below appear only on hover
+    if (note.pinned) children.push(el('span', { class: 'pin-mark', text: '★', attrs: { 'data-tip': t('note.pinned') } }));
+    children.push(
+      el('span', { class: 'row-actions' }, [
+        smallButton(note.pinned ? '★' : '☆', note.pinned ? t('note.unpin') : t('note.pin'), () => {
+          void updateNotes((l) => togglePin(l, note.id));
+        }),
+        smallButton('✕', t('note.deleteTip'), () => void onDelete(note)),
       ]),
     );
+    list.append(el('li', { class: 'note-row' }, children));
   }
   body.append(list);
   return root;

@@ -4,6 +4,7 @@
 
 ```bash
 npm run lint        # ESLint (no chrome.* globals, no eval, no innerHTML)
+npm run check:locales # language files (missing keys, placeholders)
 npm run typecheck   # TypeScript
 npm test            # unit tests (Vitest)
 npm run verify      # all of the above + builds for Chromium and Firefox + build checks
@@ -25,7 +26,7 @@ addons.mozilla.org uses. Fix every **error**; read every **warning**.
 
 Firefox notes:
 
-- Host permissions (`<all_urls>`) are optional in Manifest V3 on Firefox; the extension does not need them yet.
+- Access to websites is optional: it is requested only when you switch on "site icons" in the settings. Firefox shows its own permission prompt.
 - On a new tab Firefox puts the cursor in the address bar. Click the page (or press `Tab`) before using the `/` search shortcut.
 - If two extensions override the new tab, Firefox lets the first one win.
 - **Firefox for Android does not support new tab overrides** (`chrome_url_overrides`), so FluxHome targets desktop Firefox only. Untick Android on the AMO listing.

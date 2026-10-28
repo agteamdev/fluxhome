@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   addBookmark,
+  addBookmarkToFirstGroup,
+  clearFailedFavicons,
+  clearFavicon,
+  setFavicons,
   addWidget,
   applyWidgetSelection,
   addGroup,
@@ -11,6 +15,7 @@ import {
   moveGroup,
   moveWidget,
   renameGroup,
+  setColumnCount,
   updateBookmark,
   updateWidgetProps,
 } from './page-ops';
@@ -138,9 +143,9 @@ describe('widget visibility', () => {
 
   it('applies a selection of widget types', () => {
     let n = 0;
-    const page = applyWidgetSelection(makePage(), ['bookmarks', 'clock', 'search'], 2, () => `id${++n}`);
+    const page = applyWidgetSelection(makePage(), ['bookmarks', 'clock', 'notes'], 2, () => `id${++n}`);
     const types = page.widgets.map((w) => w.type).sort();
-    expect(types).toEqual(['bookmarks', 'clock', 'search']);
+    expect(types).toEqual(['bookmarks', 'clock', 'notes']);
   });
 });
 
@@ -156,5 +161,65 @@ describe('moveGroup', () => {
   it('ignores unknown groups', () => {
     const page = makePage();
     expect(moveGroup(page, 'nope', null)).toBe(page);
+  });
+});
+
+describe('setColumnCount', () => {
+  it('adds columns', () => {
+    let n = 0;
+    const page = setColumnCount(makePage(), 4, () => `new${++n}`);
+    expect(page.columns.map((c) => c.id)).toEqual(['c1', 'c2', 'new1', 'new2']);
+    expect(page.widgets).toHaveLength(3);
+  });
+  it('removes columns and moves their widgets to the least filled column', () => {
+    const page = setColumnCount(makePage(), 1, () => 'x');
+    expect(page.columns.map((c) => c.id)).toEqual(['c1']);
+    expect(page.widgets).toHaveLength(3);
+    expect(page.widgets.every((w) => w.columnId === 'c1')).toBe(true);
+    expect(page.widgets.map((w) => w.order).sort()).toEqual([0, 1, 2]);
+  });
+  it('spreads displaced widgets over the remaining columns', () => {
+    let n = 0;
+    let page = setColumnCount(makePage(), 3, () => `n${++n}`); // columns c1, c2, n1
+    page = { ...page, widgets: [...page.widgets, { id: 'w4', type: 'clock', columnId: 'n1', order: 0, props: {} }] };
+    const result = setColumnCount(page, 2, () => 'x');
+    const count = (id: string) => result.widgets.filter((w) => w.columnId === id).length;
+    expect(count('c1') + count('c2')).toBe(4);
+    expect(count('c2')).toBe(2); // c2 had 1 widget, c1 had 2: the moved one goes to c2
+  });
+  it('does nothing when the count matches', () => {
+    const page = makePage();
+    expect(setColumnCount(page, 2, () => 'x')).toBe(page);
+  });
+});
+
+describe('context menu and icons', () => {
+  it('adds to the first group', () => {
+    const page = addBookmarkToFirstGroup(makePage(), bm('x'), 'ng', 'Saved');
+    expect(ids(page, 'g1')).toEqual(['a', 'b', 'c', 'x']);
+  });
+  it('creates a group when the page has none', () => {
+    const empty = { ...makePage(), groups: [] };
+    const page = addBookmarkToFirstGroup(empty, bm('x'), 'ng', 'Saved');
+    expect(page.groups).toHaveLength(1);
+    expect(page.groups[0]).toEqual({ id: 'ng', title: 'Saved', bookmarks: [bm('x')] });
+  });
+  it('stores icons and forgets failed markers', () => {
+    let page = setFavicons(makePage(), { a: 'data:image/png;base64,AA', b: '' });
+    expect(page.groups[0]!.bookmarks[0]!.favicon).toBe('data:image/png;base64,AA');
+    expect(page.groups[0]!.bookmarks[1]!.favicon).toBe('');
+    expect(page.groups[0]!.bookmarks[2]!.favicon).toBe(undefined);
+    page = clearFailedFavicons(page);
+    expect(page.groups[0]!.bookmarks[0]!.favicon).toBe('data:image/png;base64,AA');
+    expect(page.groups[0]!.bookmarks[1]!.favicon).toBe(undefined);
+  });
+});
+
+describe('clearFavicon', () => {
+  it('removes the icon of one bookmark only', () => {
+    const page = setFavicons(makePage(), { a: 'data:image/png;base64,AA', b: 'data:image/png;base64,BB' });
+    const cleared = clearFavicon(page, 'a');
+    expect(cleared.groups[0]!.bookmarks[0]!.favicon).toBe(undefined);
+    expect(cleared.groups[0]!.bookmarks[1]!.favicon).toBe('data:image/png;base64,BB');
   });
 });

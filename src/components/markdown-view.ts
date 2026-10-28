@@ -1,4 +1,5 @@
 import { el } from './dom';
+import { t } from '@/lib/i18n';
 import { parseMarkdown, type Block, type Inline } from '@/utils/markdown';
 
 function renderInline(nodes: Inline[]): Node[] {
@@ -39,7 +40,7 @@ function renderBlock(block: Block): HTMLElement {
 export function renderMarkdown(source: string): HTMLElement {
   const root = el('div', { class: 'markdown' });
   const blocks = parseMarkdown(source);
-  if (blocks.length === 0) root.append(el('p', { class: 'muted', text: 'This note is empty.' }));
+  if (blocks.length === 0) root.append(el('p', { class: 'muted', text: t('md.empty') }));
   for (const block of blocks) root.append(renderBlock(block));
   return root;
 }

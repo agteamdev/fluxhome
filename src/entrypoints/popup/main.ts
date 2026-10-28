@@ -3,6 +3,7 @@ import './style.css';
 import { browser } from 'wxt/browser';
 import { el } from '@/components/dom';
 import { loadConfig } from '@/lib/config';
+import { locale, setLanguage, t } from '@/lib/i18n';
 import { addBookmark, addGroup, findBookmarkByUrl } from '@/lib/page-ops';
 import { updatePage } from '@/lib/page-store';
 import { uid } from '@/utils/id';
@@ -20,6 +21,8 @@ async function init(): Promise<void> {
   app.append(root);
 
   const config = await loadConfig();
+  setLanguage(config.settings.language);
+  document.documentElement.lang = locale();
   document.documentElement.dataset.theme = config.settings.theme;
   const page = config.pages.find((p) => p.id === config.activePageId) ?? config.pages[0]!;
 
@@ -28,8 +31,8 @@ async function init(): Promise<void> {
   const url = tab?.url && /^https?:\/\//i.test(tab.url) ? normalizeUrl(tab.url) : null;
   if (!url) {
     root.append(
-      el('h1', { text: 'Save to FluxHome' }),
-      el('p', { class: 'muted', text: 'This page cannot be saved. Only http and https pages are supported.' }),
+      el('h1', { text: t('pu.title') }),
+      el('p', { class: 'muted', text: t('pu.cannot') }),
     );
     return;
   }
@@ -42,12 +45,12 @@ async function init(): Promise<void> {
   for (const group of page.groups) {
     groupSelect.append(el('option', { text: group.title, attrs: { value: group.id } }));
   }
-  groupSelect.append(el('option', { text: 'New group…', attrs: { value: NEW_GROUP } }));
+  groupSelect.append(el('option', { text: t('pu.newGroup'), attrs: { value: NEW_GROUP } }));
   if (page.groups.length === 0) groupSelect.value = NEW_GROUP;
 
-  const newGroupInput = el('input', { attrs: { type: 'text', autocomplete: 'off', placeholder: 'Group name' } });
-  newGroupInput.value = 'Saved';
-  const newGroupField = field('New group name', newGroupInput);
+  const newGroupInput = el('input', { attrs: { type: 'text', autocomplete: 'off', placeholder: t('pu.groupName') } });
+  newGroupInput.value = t('default.saved');
+  const newGroupField = field(t('pu.newGroupName'), newGroupInput);
   const syncNewGroup = (): void => {
     newGroupField.hidden = groupSelect.value !== NEW_GROUP;
   };
@@ -60,19 +63,19 @@ async function init(): Promise<void> {
   const duplicate = findBookmarkByUrl(page, url);
   const save = el('button', {
     class: 'save',
-    text: duplicate ? 'Save again' : 'Save this page',
+    text: duplicate ? t('pu.saveAgain') : t('pu.save'),
     attrs: { type: 'submit' },
   });
 
   const form = el('form', { class: 'popup' }, [
-    el('h1', { text: 'Save to FluxHome' }),
+    el('h1', { text: t('pu.title') }),
     el('div', { class: 'url', text: url, attrs: { title: url } }),
-    field('Title', titleInput),
-    field('Group', groupSelect),
+    field(t('pu.titleField'), titleInput),
+    field(t('pu.group'), groupSelect),
     newGroupField,
   ]);
   if (duplicate) {
-    form.append(el('p', { class: 'notice', text: `Already saved in “${duplicate.group.title}”.` }));
+    form.append(el('p', { class: 'notice', text: t('pu.already', { group: duplicate.group.title }) }));
   }
   form.append(error, save);
   root.replaceWith(form);
@@ -90,7 +93,7 @@ async function init(): Promise<void> {
     };
     const creatingGroup = groupSelect.value === NEW_GROUP;
     const newGroupId = uid();
-    const newGroupTitle = newGroupInput.value.trim() || 'Saved';
+    const newGroupTitle = newGroupInput.value.trim() || t('default.saved');
     const targetGroupId = creatingGroup ? newGroupId : groupSelect.value;
 
     try {
@@ -98,11 +101,11 @@ async function init(): Promise<void> {
         const base = creatingGroup ? addGroup(p, { id: newGroupId, title: newGroupTitle, bookmarks: [] }) : p;
         return addBookmark(base, targetGroupId, bookmark);
       });
-      save.textContent = 'Saved ✓';
+      save.textContent = t('pu.saved');
       setTimeout(() => window.close(), 700);
     } catch (err) {
       console.error(err);
-      error.textContent = 'Could not save this page.';
+      error.textContent = t('pu.error');
       error.hidden = false;
       save.disabled = false;
     }

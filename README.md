@@ -19,6 +19,7 @@ npm run build:firefox  # Firefox  -> .output/firefox-mv3
 npm run typecheck
 npm test               # unit tests (Vitest)
 npm run lint           # ESLint
+npm run check:locales  # language files
 npm run verify         # lint + typecheck + tests + both builds + build checks
 ```
 
@@ -44,6 +45,7 @@ Requires Firefox 140 or newer. Firefox for Android does not support new tab over
 - `src/widgets/` — widgets (one module per widget)
 - `src/components/` — shared UI components
 - `src/assets/` — shared styles
+- `src/locales/` — language files (one JSON file per language, see [docs/TRANSLATING.md](docs/TRANSLATING.md))
 - `src/utils/` — helpers
 - `public/icons/` — extension icons (16/32/48/96/128), copied into the build as-is
 

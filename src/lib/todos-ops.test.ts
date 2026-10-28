@@ -57,3 +57,19 @@ describe('isOverdue', () => {
     expect(isOverdue(todo('a'), today)).toBe(false);
   });
 });
+
+describe('isOverdue with a time', () => {
+  const at = (h: number, m = 0) => new Date(2026, 9, 27, h, m).getTime();
+  it('is overdue right after the deadline time', () => {
+    expect(isOverdue(todo('a', { deadline: at(14, 30), hasTime: true }), at(14, 31))).toBe(true);
+  });
+  it('is not overdue before the deadline time (same day)', () => {
+    expect(isOverdue(todo('a', { deadline: at(14, 30), hasTime: true }), at(14, 0))).toBe(false);
+  });
+  it('a date-only deadline stays open for the whole day', () => {
+    expect(isOverdue(todo('a', { deadline: new Date(2026, 9, 27).getTime() }), at(23, 59))).toBe(false);
+  });
+  it('done tasks are never overdue', () => {
+    expect(isOverdue(todo('a', { deadline: at(10), hasTime: true, done: true }), at(12))).toBe(false);
+  });
+});

@@ -34,12 +34,12 @@ export function sortNotes(notes: Note[]): Note[] {
 const firstLine = (content: string): string => content.split('\n').find((line) => line.trim() !== '')?.trim() ?? '';
 
 /** Title used when the user leaves the title empty: the first line of the content. */
-export function deriveTitle(content: string): string {
+export function deriveTitle(content: string, fallback = 'Untitled'): string {
   const line = firstLine(content)
     .replace(/^#{1,6}\s+/, '')
     .replace(/[*`_]/g, '')
     .trim();
-  if (!line) return 'Untitled';
+  if (!line) return fallback;
   return line.length > 60 ? `${line.slice(0, 57)}…` : line;
 }
 

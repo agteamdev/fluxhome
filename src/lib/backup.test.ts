@@ -31,15 +31,22 @@ describe('rejecting bad files', () => {
   it('rejects invalid JSON', () => {
     expect(() => parseBackup('not json')).toThrow(ImportError);
   });
+  it('reports errors with translation keys', () => {
+    try {
+      parseBackup('not json');
+    } catch (error) {
+      expect((error as ImportError).key).toBe('import.notJson');
+    }
+  });
   it('rejects files that are not FluxHome backups', () => {
     expect(() => roundTrip({ hello: 'world' })).toThrow(ImportError);
     expect(() => roundTrip({ app: 'other', schemaVersion: 1, data: {} })).toThrow(ImportError);
   });
   it('rejects a backup from a newer schema', () => {
-    expect(() => roundTrip({ app: 'fluxhome', schemaVersion: SCHEMA_VERSION + 1, data: {} })).toThrow(/newer/);
+    expect(() => roundTrip({ app: 'fluxhome', schemaVersion: SCHEMA_VERSION + 1, data: {} })).toThrow(/import\.newer/);
   });
   it('rejects a backup without pages', () => {
-    expect(() => roundTrip({ app: 'fluxhome', schemaVersion: SCHEMA_VERSION, data: { pages: [] } })).toThrow(/no pages/);
+    expect(() => roundTrip({ app: 'fluxhome', schemaVersion: SCHEMA_VERSION, data: { pages: [] } })).toThrow(/import\.noPages/);
   });
 });
 
@@ -59,7 +66,9 @@ describe('sanitizing', () => {
     (backup.data as unknown as Record<string, unknown>).settings = { theme: 'dark', columnsCount: 99 };
     const { settings } = roundTrip(backup).data;
     expect(settings.theme).toBe('dark');
-    expect(settings.columnsCount).toBe(6);
+    expect(settings.columnsCount).toBe(4);
+    expect(settings.language).toBe('auto');
+    expect(settings.searchEngine).toBe('brave');
     expect(settings.showGreeting).toBe(true);
   });
 
@@ -84,6 +93,19 @@ describe('sanitizing', () => {
     backup.data.activePageId = 'nope';
     const result = roundTrip(backup);
     expect(result.data.activePageId).toBe(result.data.pages[0]!.id);
+  });
+});
+
+describe('todo deadlines', () => {
+  it('keeps a deadline with a time and drops a time flag without a deadline', () => {
+    const backup = buildBackup(createDefaultData());
+    backup.data.todos.push(
+      { id: 't1', text: 'with time', done: false, priority: 'high', deadline: 1000, hasTime: true },
+      { id: 't2', text: 'no deadline', done: false, priority: 'low', hasTime: true },
+    );
+    const todos = roundTrip(backup).data.todos;
+    expect(todos[0]!.hasTime).toBe(true);
+    expect(todos[1]!.hasTime).toBe(undefined);
   });
 });
 

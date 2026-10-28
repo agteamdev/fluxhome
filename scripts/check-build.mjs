@@ -5,7 +5,9 @@ import { join } from 'node:path';
 
 const outputDir = process.argv[2] ?? '.output';
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // package size limit from the spec (without images)
-const REQUIRED_PERMISSIONS = ['storage', 'tabs', 'contextMenus', 'bookmarks', 'alarms'];
+const REQUIRED_PERMISSIONS = ['storage', 'activeTab', 'contextMenus'];
+// Permissions that must NOT be requested up front (stores reject unused or excessive permissions)
+const FORBIDDEN_PERMISSIONS = ['tabs', 'bookmarks', 'alarms', 'history', 'downloads', 'webRequest', 'cookies'];
 
 let failures = 0;
 const fail = (target, message) => {
@@ -39,7 +41,7 @@ function checkBuild(name, dir, { firefox }) {
   const popup = m.action?.default_popup;
   popup && has(popup) ? ok(name, `popup -> ${popup}`) : fail(name, 'popup missing or file not found');
 
-  for (const size of ['16', '48', '128']) {
+  for (const size of ['16', '32', '48', '96', '128']) {
     const icon = m.icons?.[size];
     icon && has(icon) ? ok(name, `icon ${size}`) : fail(name, `icon ${size} missing`);
   }
@@ -47,8 +49,13 @@ function checkBuild(name, dir, { firefox }) {
   const missing = REQUIRED_PERMISSIONS.filter((p) => !(m.permissions ?? []).includes(p));
   missing.length === 0 ? ok(name, 'permissions') : fail(name, `missing permissions: ${missing.join(', ')}`);
 
-  const hosts = [...(m.host_permissions ?? []), ...(m.optional_host_permissions ?? [])];
-  hosts.includes('<all_urls>') ? ok(name, 'host permissions') : fail(name, 'host permission <all_urls> missing');
+  const forbidden = FORBIDDEN_PERMISSIONS.filter((p) => (m.permissions ?? []).includes(p));
+  forbidden.length === 0 ? ok(name, 'no unneeded permissions') : fail(name, `unneeded permissions: ${forbidden.join(', ')}`);
+
+  (m.host_permissions ?? []).length === 0 ? ok(name, 'no required host permissions') : fail(name, 'host_permissions must be optional');
+  (m.optional_host_permissions ?? []).includes('<all_urls>')
+    ? ok(name, 'optional host permission <all_urls> (site icons)')
+    : fail(name, 'optional_host_permissions <all_urls> missing');
 
   const background = m.background;
   background && (background.service_worker || background.scripts)

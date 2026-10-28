@@ -28,8 +28,13 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: 'FluxHome',
     description: 'Local-first start page: bookmarks, notes, todos. No cloud, no telemetry.',
-    permissions: ['storage', 'tabs', 'contextMenus', 'bookmarks', 'alarms'],
-    host_permissions: ['<all_urls>'],
+    // Only what is used today:
+    //  - storage: all data stays in the browser
+    //  - activeTab: the toolbar popup reads the title/address of the current tab when you click it
+    //  - contextMenus: "Save link / page to FluxHome" in the right-click menu
+    // Access to websites is optional: it is requested only if you turn on "site icons" in the settings.
+    permissions: ['storage', 'activeTab', 'contextMenus'],
+    optional_host_permissions: ['<all_urls>'],
     // Listed explicitly (files live in public/icons) instead of relying on automatic detection
     icons: {
       16: 'icons/16.png',

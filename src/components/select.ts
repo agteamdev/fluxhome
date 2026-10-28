@@ -1,5 +1,6 @@
 import { el } from './dom';
 import { openPopup, type PopupHandle } from './popup';
+import { t } from '@/lib/i18n';
 
 export interface SelectItem {
   value: string;
@@ -7,6 +8,8 @@ export interface SelectItem {
   /** Items with the same group are listed under one heading (keep them next to each other). */
   group?: string;
   title?: string;
+  /** A small colored circle with a letter, shown before the label (e.g. search engines). */
+  badge?: { text: string; color: string };
 }
 
 export interface SelectOptions {
@@ -22,6 +25,8 @@ export interface SelectOptions {
   filter?: (query: string, item: SelectItem) => boolean;
   /** Act like an "add" menu: after choosing, the control goes back to the placeholder. */
   resetAfterSelect?: boolean;
+  /** Show only the item's badge (no text) in the closed control. */
+  iconOnly?: boolean;
   onChange?: (value: string) => void;
 }
 
@@ -30,6 +35,12 @@ export interface SelectControl {
   value: string;
   disabled: boolean;
   setItems(items: SelectItem[]): void;
+}
+
+function badgeElement(badge: { text: string; color: string }): HTMLElement {
+  const node = el('span', { class: 'badge-dot', text: badge.text, attrs: { 'aria-hidden': 'true' } });
+  node.style.backgroundColor = badge.color;
+  return node;
 }
 
 const defaultFilter = (query: string, item: SelectItem): boolean => item.label.toLowerCase().includes(query.toLowerCase());
@@ -44,7 +55,7 @@ export function createSelect(options: SelectOptions): SelectControl {
   let handle: PopupHandle | null = null;
 
   const label = el('span', { class: 'select-label' });
-  const trigger = el('button', { class: 'select', attrs: { type: 'button', 'aria-haspopup': 'listbox', 'aria-expanded': 'false' } }, [
+  const trigger = el('button', { class: options.iconOnly ? 'select icon-only' : 'select', attrs: { type: 'button', 'aria-haspopup': 'listbox', 'aria-expanded': 'false' } }, [
     label,
     el('span', { class: 'select-chevron', text: '▾', attrs: { 'aria-hidden': 'true' } }),
   ]);
@@ -52,7 +63,11 @@ export function createSelect(options: SelectOptions): SelectControl {
 
   const refreshLabel = (): void => {
     const current = items.find((i) => i.value === value);
-    label.textContent = current ? current.label : (options.placeholder ?? '');
+    label.replaceChildren();
+    if (current?.badge) label.append(badgeElement(current.badge));
+    if (!(options.iconOnly && current?.badge)) {
+      label.append(document.createTextNode(current ? current.label : (options.placeholder ?? '')));
+    }
     label.classList.toggle('placeholder', !current);
   };
 
@@ -66,7 +81,7 @@ export function createSelect(options: SelectOptions): SelectControl {
     const search = options.searchable
       ? el('input', {
           class: 'select-search',
-          attrs: { type: 'search', placeholder: options.searchPlaceholder ?? 'Filter…', autocomplete: 'off', 'aria-label': 'Filter' },
+          attrs: { type: 'search', placeholder: options.searchPlaceholder ?? t('common.filter'), autocomplete: 'off', 'aria-label': t('common.filterLabel') },
         })
       : null;
     const popup = el('div', { class: 'select-popup' }, search ? [search, list] : [list]);
@@ -98,7 +113,7 @@ export function createSelect(options: SelectOptions): SelectControl {
       visible = query ? items.filter((i) => match(query, i)) : items;
       list.replaceChildren();
       if (visible.length === 0) {
-        list.append(el('li', { class: 'select-empty', text: 'No matches' }));
+        list.append(el('li', { class: 'select-empty', text: t('common.noMatches') }));
         active = -1;
         return;
       }
@@ -111,9 +126,10 @@ export function createSelect(options: SelectOptions): SelectControl {
         const selected = item.value === value;
         const row = el('li', {
           class: selected ? 'select-option selected' : 'select-option',
-          text: item.label,
           attrs: { role: 'option', 'aria-selected': String(selected) },
         });
+        if (item.badge) row.append(badgeElement(item.badge));
+        row.append(document.createTextNode(item.label));
         if (item.title) row.title = item.title;
         row.addEventListener('pointerdown', (event) => event.preventDefault()); // keep the focus where it is
         row.addEventListener('click', () => choose(item));

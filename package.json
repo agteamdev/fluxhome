@@ -2,7 +2,7 @@
   "name": "fluxhome",
   "description": "FluxHome — a local-first start page (new tab) with no cloud and no telemetry",
   "private": true,
-  "version": "0.8.1",
+  "version": "0.10.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "lint:firefox": "npm run build:firefox && npx --yes web-ext lint --source-dir .output/firefox-mv3",
     "check": "node scripts/check-build.mjs",
-    "verify": "npm run lint && npm run typecheck && npm test && npm run build && npm run build:firefox && npm run check"
+    "verify": "npm run lint && npm run typecheck && npm test && npm run check:locales && npm run build && npm run build:firefox && npm run check",
+    "check:locales": "node scripts/check-locales.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

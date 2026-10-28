@@ -1,5 +1,6 @@
 import { storage } from './storage';
 import { createDefaultData } from './defaults';
+import { detectLanguage, translateTo } from './i18n';
 import { migrateData } from './migrations';
 import { SCHEMA_VERSION, type StorageSchema } from './types';
 
@@ -12,7 +13,14 @@ export async function initStorage(): Promise<void> {
   const all = await storage.getAll();
 
   if (all.schemaVersion === undefined || !all.pages || all.pages.length === 0) {
-    await storage.setMany(createDefaultData());
+    const language = detectLanguage('auto');
+    await storage.setMany(
+      createDefaultData({
+        page: translateTo(language, 'default.page'),
+        groupUseful: translateTo(language, 'default.useful'),
+        groupNews: translateTo(language, 'default.news'),
+      }),
+    );
     return;
   }
 

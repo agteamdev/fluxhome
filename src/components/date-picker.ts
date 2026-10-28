@@ -8,6 +8,7 @@ import {
   shiftMonth,
   weekdayLabels,
 } from '@/utils/calendar';
+import { locale, t } from '@/lib/i18n';
 import { formatDateInput } from '@/utils/date';
 
 export interface DatePickerOptions {
@@ -41,8 +42,8 @@ export function createDatePicker(options: DatePickerOptions): DatePickerControl 
   const refreshLabel = (): void => {
     const parsed = parseValue(value);
     label.textContent = parsed
-      ? new Date(parsed.year, parsed.month, parsed.day).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
-      : (options.placeholder ?? 'No date');
+      ? new Date(parsed.year, parsed.month, parsed.day).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' })
+      : (options.placeholder ?? t('common.noDate'));
     label.classList.toggle('placeholder', !parsed);
   };
 
@@ -57,14 +58,14 @@ export function createDatePicker(options: DatePickerOptions): DatePickerControl 
 
     const title = el('div', { class: 'cal-title', attrs: { 'aria-live': 'polite' } });
     const grid = el('div', { class: 'cal-grid', attrs: { role: 'grid' } });
-    const prev = el('button', { class: 'btn small', text: '‹', attrs: { type: 'button', 'aria-label': 'Previous month' } });
-    const next = el('button', { class: 'btn small', text: '›', attrs: { type: 'button', 'aria-label': 'Next month' } });
-    const todayButton = el('button', { class: 'btn small', text: 'Today', attrs: { type: 'button' } });
-    const clearButton = el('button', { class: 'btn small', text: 'Clear', attrs: { type: 'button' } });
+    const prev = el('button', { class: 'btn small', text: '‹', attrs: { type: 'button', 'aria-label': t('cal.prev') } });
+    const next = el('button', { class: 'btn small', text: '›', attrs: { type: 'button', 'aria-label': t('cal.next') } });
+    const todayButton = el('button', { class: 'btn small', text: t('cal.today'), attrs: { type: 'button' } });
+    const clearButton = el('button', { class: 'btn small', text: t('common.clear'), attrs: { type: 'button' } });
     const weekdays = el(
       'div',
       { class: 'cal-grid cal-weekdays', attrs: { 'aria-hidden': 'true' } },
-      weekdayLabels(WEEK_START).map((name) => el('span', { text: name })),
+      weekdayLabels(WEEK_START, locale()).map((name) => el('span', { text: name })),
     );
     const popup = el('div', { class: 'calendar' }, [
       el('div', { class: 'cal-header' }, [prev, title, next]),
@@ -82,7 +83,7 @@ export function createDatePicker(options: DatePickerOptions): DatePickerControl 
     };
 
     const render = (focusButton: boolean): void => {
-      title.textContent = monthLabel(view.year, view.month);
+      title.textContent = monthLabel(view.year, view.month, locale());
       grid.replaceChildren();
       const cells = buildMonthGrid(view.year, view.month, WEEK_START);
       // Roving tab stop: only one day button is reachable with Tab, arrows move between days

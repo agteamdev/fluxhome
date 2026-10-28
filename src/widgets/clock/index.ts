@@ -1,5 +1,6 @@
 import { el } from '@/components/dom';
 import { widgetFrame } from '@/components/widget-frame';
+import { locale, t } from '@/lib/i18n';
 import {
   dayOffset,
   formatTime,
@@ -22,10 +23,10 @@ export function renderClockWidget(widget: WidgetConfig, page: Page): HTMLElement
   const settings = el('button', {
     class: 'btn small',
     text: '⚙',
-    attrs: { type: 'button', title: 'Clock settings', 'aria-label': 'Clock settings' },
+    attrs: { type: 'button', title: t('clock.settings'), 'aria-label': t('clock.settings') },
   });
   settings.addEventListener('click', () => void onSettings());
-  const { root, body } = widgetFrame(widget, 'Clock', [settings]);
+  const { root, body } = widgetFrame(widget, t('clock.title'), [settings]);
 
   // ---- main clock ----
   const main = el('div', { class: 'clock-main' });
@@ -46,18 +47,18 @@ export function renderClockWidget(widget: WidgetConfig, page: Page): HTMLElement
   });
   if (zoneRows.length > 0) body.append(el('ul', { class: 'zones' }, zoneRows.map((r) => r.row)));
 
-  const dateFormat = new Intl.DateTimeFormat(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  const dateFormat = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
   const update = (): void => {
     const now = new Date();
     if (analog) analog.update(getTimeParts(now, localZone));
-    else timeText.textContent = formatTime(now, localZone, options.hour12, true);
+    else timeText.textContent = formatTime(now, localZone, options.hour12, true, locale());
     dateText.textContent = dateFormat.format(now);
 
     for (const { zone, time, note } of zoneRows) {
-      time.textContent = formatTime(now, zone, options.hour12, false);
+      time.textContent = formatTime(now, zone, options.hour12, false, locale());
       const offset = dayOffset(now, zone, localZone);
-      note.textContent = offset > 0 ? 'tomorrow' : offset < 0 ? 'yesterday' : '';
+      note.textContent = offset > 0 ? t('clock.tomorrow') : offset < 0 ? t('clock.yesterday') : '';
     }
   };
   update();

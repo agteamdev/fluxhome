@@ -22,7 +22,45 @@ export function formatDateInput(timestamp: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/** Short human readable date for the UI, e.g. "27 Oct". */
-export function formatDeadline(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+/** Short human readable deadline for the UI: "27 Oct" or, with a time, "27 Oct, 14:30". */
+export function formatDeadline(timestamp: number, hasTime = false, locale?: string): string {
+  const date = new Date(timestamp);
+  const day = date.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+  return hasTime ? `${day}, ${formatTimeInput(timestamp)}` : day;
+}
+
+/** "14:30" -> minutes since midnight (870), or undefined if invalid. Accepts "9:05" too. */
+export function parseTimeInput(value: string): number | undefined {
+  const match = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(value.trim());
+  return match ? Number(match[1]) * 60 + Number(match[2]) : undefined;
+}
+
+/** Timestamp -> "HH:MM" in local time. */
+export function formatTimeInput(timestamp: number): string {
+  const d = new Date(timestamp);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Every `stepMinutes` minutes of a day as "HH:MM": 00:00, 00:05, ... */
+export function timeSlots(stepMinutes = 5): string[] {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const slots: string[] = [];
+  for (let minutes = 0; minutes < 24 * 60; minutes += stepMinutes) {
+    slots.push(`${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`);
+  }
+  return slots;
+}
+
+/**
+ * Combines a date ("YYYY-MM-DD") and an optional time ("HH:MM") into a deadline.
+ * Returns undefined when there is no valid date. `hasTime` tells whether a time was given.
+ */
+export function combineDeadline(date: string, time: string): { deadline: number; hasTime: boolean } | undefined {
+  const day = parseDateInput(date);
+  if (day === undefined) return undefined;
+  const minutes = parseTimeInput(time);
+  if (minutes === undefined) return { deadline: day, hasTime: false };
+  const d = new Date(day);
+  return { deadline: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, minutes).getTime(), hasTime: true };
 }

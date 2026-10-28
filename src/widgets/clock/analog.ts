@@ -1,5 +1,6 @@
 import type { TimeParts } from '@/lib/clock';
 import { handAngles } from '@/lib/clock';
+import { t } from '@/lib/i18n';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -12,7 +13,7 @@ function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string,
 
 /** Analog clock drawn as SVG (built with DOM calls, colors come from CSS classes). */
 export function createAnalogClock(): { element: SVGSVGElement; update: (time: TimeParts) => void } {
-  const root = svg('svg', { viewBox: '0 0 100 100', role: 'img', 'aria-label': 'Analog clock' }, 'analog');
+  const root = svg('svg', { viewBox: '0 0 100 100', role: 'img', 'aria-label': t('clock.aria') }, 'analog');
   root.append(svg('circle', { cx: '50', cy: '50', r: '46' }, 'analog-face'));
 
   for (let i = 0; i < 12; i++) {

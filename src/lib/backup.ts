@@ -13,6 +13,8 @@ import {
   type WidgetConfig,
 } from './types';
 import { uid } from '@/utils/id';
+import { parseEngine } from './search-engines';
+import { MAX_COLUMNS } from './settings';
 import { hostnameOf, normalizeUrl } from '@/utils/url';
 
 /**
@@ -30,8 +32,17 @@ export interface BackupFile {
   data: Omit<StorageSchema, 'schemaVersion'>;
 }
 
-/** An error whose message is safe to show to the user. */
-export class ImportError extends Error {}
+/** An error the user can be told about. `key` is a translation key, `params` fill its placeholders. */
+export class ImportError extends Error {
+  readonly key: string;
+  readonly params: Record<string, string | number>;
+
+  constructor(key: string, params: Record<string, string | number> = {}) {
+    super(key);
+    this.key = key;
+    this.params = params;
+  }
+}
 
 export interface ImportStats {
   pages: number;
@@ -60,27 +71,25 @@ export function parseBackup(text: string): ImportResult {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw new ImportError('This file is not valid JSON.');
+    throw new ImportError('import.notJson');
   }
   if (!isRecord(raw) || raw.app !== BACKUP_APP_ID || !isRecord(raw.data)) {
-    throw new ImportError('This is not a FluxHome backup file.');
+    throw new ImportError('import.notBackup');
   }
 
   const version = raw.schemaVersion;
   if (typeof version !== 'number' || !Number.isInteger(version) || version < 0) {
-    throw new ImportError('The backup has no valid schema version.');
+    throw new ImportError('import.noVersion');
   }
   if (version > SCHEMA_VERSION) {
-    throw new ImportError(
-      `This backup was created by a newer FluxHome (schema ${version}). Update the extension and try again.`,
-    );
+    throw new ImportError('import.newer', { version });
   }
 
   let migrated: Record<string, unknown>;
   try {
     migrated = migrateData(raw.data, version);
   } catch (error) {
-    throw new ImportError(`Could not upgrade the backup: ${error instanceof Error ? error.message : String(error)}`);
+    throw new ImportError('import.migrationFailed', { reason: error instanceof Error ? error.message : String(error) });
   }
   return sanitize(migrated, version);
 }
@@ -97,7 +106,7 @@ interface Context {
 const THEMES = ['light', 'dark', 'auto'] as const;
 const BACKGROUNDS = ['solid', 'image', 'gradient'] as const;
 const PRIORITIES = ['low', 'medium', 'high'] as const;
-const WIDGET_TYPES = ['bookmarks', 'notes', 'todos', 'clock', 'search', 'rss'] as const;
+const WIDGET_TYPES = ['bookmarks', 'notes', 'todos', 'clock'] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -128,8 +137,10 @@ function sanitizeBookmark(raw: unknown, ctx: Context): Bookmark | null {
   const title = typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : hostnameOf(url);
   const bookmark: Bookmark = { id: uniqueId(raw.id, ctx), title, url, createdAt: num(raw.createdAt, Date.now()) };
 
-  if (typeof raw.favicon === 'string' && (raw.favicon.startsWith('data:image/') || normalizeUrl(raw.favicon))) {
-    bookmark.favicon = raw.favicon;
+  if (typeof raw.favicon === 'string') {
+    const icon = raw.favicon;
+    // '' = "no icon found"; data URLs are capped so a bad file cannot bloat the storage
+    if (icon === '' || (icon.startsWith('data:image/') && icon.length <= 150_000) || normalizeUrl(icon)) bookmark.favicon = icon;
   }
   const tags = asArray(raw.tags).filter((t): t is string => typeof t === 'string');
   if (tags.length > 0) bookmark.tags = tags;
@@ -218,7 +229,10 @@ function sanitizeTodo(raw: unknown, ctx: Context): Todo | null {
     done: bool(raw.done, false),
     priority: oneOf(raw.priority, PRIORITIES, 'medium'),
   };
-  if (typeof raw.deadline === 'number' && Number.isFinite(raw.deadline)) todo.deadline = raw.deadline;
+  if (typeof raw.deadline === 'number' && Number.isFinite(raw.deadline)) {
+    todo.deadline = raw.deadline;
+    if (raw.hasTime === true) todo.hasTime = true;
+  }
   return todo;
 }
 
@@ -233,7 +247,12 @@ function sanitizeSettings(raw: unknown): Settings {
     showGreeting: bool(s.showGreeting, d.showGreeting),
     userName: str(s.userName, d.userName),
     greetingByTime: bool(s.greetingByTime, d.greetingByTime),
-    columnsCount: Math.min(6, Math.max(1, columnsCount)),
+    columnsCount: Math.min(MAX_COLUMNS, Math.max(1, columnsCount)),
+    language: str(s.language, d.language) || 'auto',
+    showWebSearch: bool(s.showWebSearch, d.showWebSearch),
+    searchEngine: parseEngine(s.searchEngine),
+    cardOpacity: Math.min(1, Math.max(0, num(s.cardOpacity, d.cardOpacity))),
+    siteIcons: bool(s.siteIcons, d.siteIcons),
   };
 }
 
@@ -243,7 +262,7 @@ function sanitize(data: Record<string, unknown>, sourceVersion: number): ImportR
   const pages = asArray(data.pages)
     .map((p) => sanitizePage(p, ctx))
     .filter((p): p is Page => p !== null);
-  if (pages.length === 0) throw new ImportError('The backup contains no pages.');
+  if (pages.length === 0) throw new ImportError('import.noPages');
 
   const notes = asArray(data.notes)
     .map((n) => sanitizeNote(n, ctx))

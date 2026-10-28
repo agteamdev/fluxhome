@@ -1,5 +1,6 @@
 import { el } from './dom';
 import { makeWidgetDraggable } from './widget-dnd';
+import { t } from '@/lib/i18n';
 import type { WidgetConfig } from '@/lib/types';
 
 /**
@@ -12,7 +13,7 @@ export function widgetFrame(
   actions: HTMLElement[] = [],
 ): { root: HTMLElement; body: HTMLElement } {
   const header = el('div', { class: 'widget-header' }, [
-    el('span', { class: 'grip', text: '⋮⋮', attrs: { 'aria-hidden': 'true', title: 'Drag to move' } }),
+    el('span', { class: 'grip', attrs: { 'aria-hidden': 'true', title: t('widget.drag') } }),
     el('h2', { class: 'widget-title', text: title }),
     el('div', { class: 'widget-actions' }, actions),
   ]);

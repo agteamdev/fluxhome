@@ -1,8 +1,8 @@
-/** Web search engines offered by the search widget. */
+/** Web search engines offered by the search bar. */
 export const SEARCH_ENGINES = [
-  { id: 'brave', name: 'Brave', url: 'https://search.brave.com/search?q=' },
-  { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=' },
-  { id: 'google', name: 'Google', url: 'https://www.google.com/search?q=' },
+  { id: 'brave', name: 'Brave', url: 'https://search.brave.com/search?q=', badge: { text: 'B', color: '#fb542b' } },
+  { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=', badge: { text: 'D', color: '#de5833' } },
+  { id: 'google', name: 'Google', url: 'https://www.google.com/search?q=', badge: { text: 'G', color: '#4285f4' } },
 ] as const;
 
 export type EngineId = (typeof SEARCH_ENGINES)[number]['id'];

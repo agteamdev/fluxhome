@@ -2,6 +2,31 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.10.0
+
+- Languages: English and Russian; choose in Settings (or follow the browser). New languages are added by dropping a JSON file into `src/locales` (see `docs/TRANSLATING.md`); `npm run check:locales` validates translations.
+- Settings gear in the header replaces the text button; widgets, export and import moved into the settings window.
+- Web search is now one strip in the header with an engine picker (Brave by default, DuckDuckGo, Google) next to the bookmark search. Existing search widgets are migrated automatically (data schema 2).
+- Site icons for bookmarks, downloaded directly from each site (optional; asks for the website permission only when switched on).
+- Right-click menu: "Save link to FluxHome" and "Save this page to FluxHome".
+- Fewer permissions: removed `tabs`, `bookmarks`, `alarms` and required access to all websites; added `activeTab`.
+- Cards can be made transparent (solid, slightly transparent, glass, fully transparent).
+- Tooltips in the extension design.
+- Notes and tasks: edit and delete buttons appear on hover, like in bookmarks.
+- Removed the unused "rss" widget type.
+
+## 0.9.1
+
+- Fix: header buttons (Widgets, Settings, Export, Import) were unreadable on light backgrounds; they now have their own surface color.
+- Todos: a deadline can include a time (5-minute steps). Overdue open tasks get a yellow warning triangle; the widget updates by itself when a deadline passes.
+
+## 0.9.0
+
+- Settings window (header button): your name, greeting on/off and time-of-day greeting, theme, number of columns (1-4), background (14 ready-made colors and gradients, or an image address).
+- Changing the number of columns moves the widgets of removed columns to the remaining ones.
+- Todos: new tasks are added through a "+ Task" dialog (like notes); the always-visible add row is gone.
+- Cleaner drag grip on widget headers (dots are drawn with CSS and sit closer together).
+
 ## 0.8.1
 
 - Fix: icons are now in `public/icons` (the project root), the folder WXT copies into the build. Before, they were missing from the extension and Chromium refused to load the manifest.

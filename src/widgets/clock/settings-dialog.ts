@@ -9,6 +9,7 @@ import {
   zoneRegion,
   type ClockOptions,
 } from '@/lib/clock';
+import { t } from '@/lib/i18n';
 
 /**
  * Clock settings dialog: style, time format and a world clock picker.
@@ -31,27 +32,27 @@ export function openClockSettings(current: ClockOptions): Promise<ClockOptions |
 
     const dialog = el('dialog', { class: 'dialog' });
     const form = el('form', { class: 'dialog-form' });
-    form.append(el('h3', { class: 'dialog-title', text: 'Clock settings' }));
+    form.append(el('h3', { class: 'dialog-title', text: t('clock.settings') }));
 
     const mode = createSelect({
-      ariaLabel: 'Style',
+      ariaLabel: t('clock.style'),
       value: current.mode,
       items: [
-        { value: 'digital', label: 'Digital' },
-        { value: 'analog', label: 'Analog' },
+        { value: 'digital', label: t('clock.digital') },
+        { value: 'analog', label: t('clock.analog') },
       ],
     });
     const format = createSelect({
-      ariaLabel: 'Time format',
+      ariaLabel: t('clock.format'),
       value: current.hour12 ? '12' : '24',
       items: [
-        { value: '24', label: '24-hour' },
-        { value: '12', label: '12-hour (AM/PM)' },
+        { value: '24', label: t('clock.h24') },
+        { value: '12', label: t('clock.h12') },
       ],
     });
     form.append(
-      el('label', { class: 'dialog-field' }, [el('span', { text: 'Style' }), mode.element]),
-      el('label', { class: 'dialog-field' }, [el('span', { text: 'Time format' }), format.element]),
+      el('label', { class: 'dialog-field' }, [el('span', { text: t('clock.style') }), mode.element]),
+      el('label', { class: 'dialog-field' }, [el('span', { text: t('clock.format') }), format.element]),
     );
 
     // ---- world clocks ----
@@ -64,10 +65,10 @@ export function openClockSettings(current: ClockOptions): Promise<ClockOptions |
         .map((zone) => ({ value: zone, label: describe(zone), group: zoneRegion(zone), title: zone }));
 
     const picker = createSelect({
-      ariaLabel: 'Add a time zone',
-      placeholder: 'Add a time zone…',
+      ariaLabel: t('clock.addZone'),
+      placeholder: t('clock.addZone'),
       searchable: true,
-      searchPlaceholder: 'Filter, e.g. “new york”',
+      searchPlaceholder: t('clock.filterZone'),
       resetAfterSelect: true,
       items: zoneItems(),
       // Match on the zone name ("America/New_York"), not on the label, so "new york" and "kiev" work
@@ -80,12 +81,12 @@ export function openClockSettings(current: ClockOptions): Promise<ClockOptions |
     });
 
     const refresh = (): void => {
-      counter.textContent = `${zones.length} of ${MAX_ZONES}`;
+      counter.textContent = t('clock.count', { count: zones.length, max: MAX_ZONES });
       picker.setItems(zoneItems());
       picker.disabled = zones.length >= MAX_ZONES;
 
       if (zones.length === 0) {
-        chips.replaceChildren(el('li', { class: 'muted', text: 'No world clocks yet' }));
+        chips.replaceChildren(el('li', { class: 'muted', text: t('clock.none') }));
         return;
       }
       chips.replaceChildren(
@@ -93,7 +94,7 @@ export function openClockSettings(current: ClockOptions): Promise<ClockOptions |
           const remove = el('button', {
             class: 'btn small',
             text: '✕',
-            attrs: { type: 'button', title: 'Remove', 'aria-label': `Remove ${zoneLabel(zone)}` },
+            attrs: { type: 'button', title: t('clock.remove'), 'aria-label': t('clock.removeZone', { zone: zoneLabel(zone) }) },
           });
           remove.addEventListener('click', () => {
             zones = zones.filter((z) => z !== zone);
@@ -104,11 +105,11 @@ export function openClockSettings(current: ClockOptions): Promise<ClockOptions |
       );
     };
 
-    form.append(el('div', { class: 'dialog-field' }, [el('span', {}, ['World clocks ', counter]), picker.element, chips]));
+    form.append(el('div', { class: 'dialog-field' }, [el('span', {}, [`${t('clock.world')} `, counter]), picker.element, chips]));
     refresh();
 
-    const cancel = el('button', { class: 'btn', text: 'Cancel', attrs: { type: 'button' } });
-    const save = el('button', { class: 'btn primary', text: 'Save', attrs: { type: 'submit' } });
+    const cancel = el('button', { class: 'btn', text: t('common.cancel'), attrs: { type: 'button' } });
+    const save = el('button', { class: 'btn primary', text: t('common.save'), attrs: { type: 'submit' } });
     form.append(el('div', { class: 'dialog-buttons' }, [cancel, save]));
     dialog.append(form);
 

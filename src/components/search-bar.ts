@@ -1,4 +1,6 @@
+import { bookmarkIcon } from './bookmark-icon';
 import { el } from './dom';
+import { t } from '@/lib/i18n';
 import { searchBookmarks } from '@/lib/search';
 import type { Page } from '@/lib/types';
 import { hostnameOf } from '@/utils/url';
@@ -10,13 +12,13 @@ let currentQuery = '';
  * Search box + results panel. While the query is not empty the results replace the columns.
  * Filtering runs on every keystroke and only touches the results panel (no full re-render).
  */
-export function renderSearch(page: Page, columns: HTMLElement): { bar: HTMLElement; results: HTMLElement } {
+export function renderSearch(page: Page, columns: HTMLElement, siteIcons: boolean): { bar: HTMLElement; results: HTMLElement } {
   const input = el('input', {
     class: 'search-input',
     attrs: {
       type: 'search',
-      placeholder: 'Search bookmarks…  (press /)',
-      'aria-label': 'Search bookmarks',
+      placeholder: t('search.bookmarks'),
+      'aria-label': t('search.bookmarksLabel'),
       autocomplete: 'off',
     },
   });
@@ -32,13 +34,13 @@ export function renderSearch(page: Page, columns: HTMLElement): { bar: HTMLEleme
 
     const hits = searchBookmarks(page, query);
     if (hits.length === 0) {
-      results.replaceChildren(el('p', { class: 'muted', text: `No bookmarks match “${query}”.` }));
+      results.replaceChildren(el('p', { class: 'muted', text: t('search.none', { query }) }));
       return;
     }
     results.replaceChildren(
       ...hits.map((hit) =>
         el('a', { class: 'hit', attrs: { href: hit.bookmark.url } }, [
-          el('span', { class: 'ico', text: (hit.bookmark.title.trim()[0] ?? '?').toUpperCase() }),
+          bookmarkIcon(hit.bookmark, siteIcons),
           el('span', { class: 'hit-text' }, [
             el('span', { class: 'hit-title', text: hit.bookmark.title }),
             el('span', { class: 'hit-meta', text: `${hit.groupTitle} · ${hostnameOf(hit.bookmark.url)}` }),

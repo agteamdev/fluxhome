@@ -135,7 +135,7 @@ export function applyWidgetSelection(
   columnLimit: number,
   newId: () => string,
 ): Page {
-  const all: WidgetType[] = ['bookmarks', 'search', 'clock', 'notes', 'todos', 'rss'];
+  const all: WidgetType[] = ['bookmarks', 'clock', 'notes', 'todos'];
   let result = page;
   for (const type of all) {
     const present = result.widgets.some((w) => w.type === type);
@@ -157,4 +157,87 @@ export function moveGroup(page: Page, groupId: string, beforeGroupId: string | n
   const index = beforeGroupId === null ? -1 : rest.findIndex((g) => g.id === beforeGroupId);
   rest.splice(index === -1 ? rest.length : index, 0, moved);
   return { ...page, groups: rest };
+}
+
+/**
+ * Makes the page have exactly `count` columns.
+ * New columns get an equal share of the width; widgets of removed columns move to the least filled
+ * remaining column (keeping their order).
+ */
+export function setColumnCount(page: Page, count: number, newId: () => string): Page {
+  const target = Math.max(1, Math.floor(count));
+  if (page.columns.length === target) return page;
+
+  if (page.columns.length < target) {
+    const added = Array.from({ length: target - page.columns.length }, () => ({
+      id: newId(),
+      width: { value: 1, unit: '%' as const },
+    }));
+    return { ...page, columns: [...page.columns, ...added] };
+  }
+
+  const kept = page.columns.slice(0, target);
+  const keptIds = new Set(kept.map((c) => c.id));
+  const columnIndex = new Map(page.columns.map((c, i) => [c.id, i]));
+  const widgets = page.widgets.filter((w) => keptIds.has(w.columnId));
+  const displaced = page.widgets
+    .filter((w) => !keptIds.has(w.columnId))
+    .sort((a, b) => (columnIndex.get(a.columnId) ?? 0) - (columnIndex.get(b.columnId) ?? 0) || a.order - b.order);
+
+  for (const widget of displaced) {
+    const counts = kept.map((c) => widgets.filter((w) => w.columnId === c.id).length);
+    const index = counts.indexOf(Math.min(...counts));
+    widgets.push({ ...widget, columnId: kept[index]!.id, order: counts[index]! });
+  }
+  return { ...page, columns: kept, widgets };
+}
+
+/** Adds a bookmark to the first group; creates a group when the page has none (used by the context menu). */
+export function addBookmarkToFirstGroup(page: Page, bookmark: Bookmark, newGroupId: string, newGroupTitle: string): Page {
+  const first = page.groups[0];
+  if (!first) return { ...page, groups: [{ id: newGroupId, title: newGroupTitle, bookmarks: [bookmark] }] };
+  return addBookmark(page, first.id, bookmark);
+}
+
+/** Stores downloaded site icons (by bookmark id). An empty string marks "no icon found". */
+export function setFavicons(page: Page, icons: Record<string, string>): Page {
+  return {
+    ...page,
+    groups: page.groups.map((g) => ({
+      ...g,
+      bookmarks: g.bookmarks.map((b) => (icons[b.id] !== undefined ? { ...b, favicon: icons[b.id] } : b)),
+    })),
+  };
+}
+
+/** Forgets "no icon found" markers so those bookmarks are tried again. */
+export function clearFailedFavicons(page: Page): Page {
+  return {
+    ...page,
+    groups: page.groups.map((g) => ({
+      ...g,
+      bookmarks: g.bookmarks.map((b) => {
+        if (b.favicon !== '') return b;
+        const copy = { ...b };
+        delete copy.favicon;
+        return copy;
+      }),
+    })),
+  };
+}
+
+/** Removes the stored icon of one bookmark so it is downloaded again (used when its address changed). */
+export function clearFavicon(page: Page, bookmarkId: string): Page {
+  return {
+    ...page,
+    groups: page.groups.map((g) => ({
+      ...g,
+      bookmarks: g.bookmarks.map((b) => {
+        if (b.id !== bookmarkId || b.favicon === undefined) return b;
+        const copy = { ...b };
+        delete copy.favicon;
+        return copy;
+      }),
+    })),
+  };
 }

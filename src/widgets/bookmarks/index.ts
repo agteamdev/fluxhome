@@ -1,6 +1,8 @@
+import { bookmarkIcon } from '@/components/bookmark-icon';
 import { el } from '@/components/dom';
 import { confirmDialog, openFormDialog } from '@/components/dialog';
 import { widgetFrame } from '@/components/widget-frame';
+import { t } from '@/lib/i18n';
 import * as ops from '@/lib/page-ops';
 import { updatePage } from '@/lib/page-store';
 import type { Bookmark, Page, WidgetConfig } from '@/lib/types';
@@ -33,10 +35,10 @@ async function askBookmark(
     title: heading,
     submitLabel,
     fields: [
-      { name: 'url', label: 'URL', value: initial?.url ?? '', placeholder: 'https://example.com', required: true },
-      { name: 'title', label: 'Title', value: initial?.title ?? '', placeholder: 'Optional (defaults to the site name)' },
+      { name: 'url', label: t('bm.url'), value: initial?.url ?? '', placeholder: 'https://example.com', required: true },
+      { name: 'title', label: t('bm.titleLabel'), value: initial?.title ?? '', placeholder: t('bm.titleHint') },
     ],
-    validate: (v) => (normalizeUrl(v.url ?? '') ? null : 'Enter a valid http(s) URL'),
+    validate: (v) => (normalizeUrl(v.url ?? '') ? null : t('bm.invalidUrl')),
   });
   if (!values) return null;
   const url = normalizeUrl(values.url ?? '')!;
@@ -44,14 +46,14 @@ async function askBookmark(
 }
 
 /** Bookmarks widget: groups as tabs, add/edit/delete, drag & drop. */
-export function renderBookmarksWidget(widget: WidgetConfig, page: Page): HTMLElement {
-  const addLink = smallButton('+ Link', 'Add a bookmark', () => void onAddBookmark());
-  const addGroup = smallButton('+ Group', 'Add a group', () => void onAddGroup());
-  const { root, body } = widgetFrame(widget, 'Bookmarks', [addLink, addGroup]);
+export function renderBookmarksWidget(widget: WidgetConfig, page: Page, siteIcons: boolean): HTMLElement {
+  const addLink = smallButton(t('bm.addLink'), t('bm.addLinkTip'), () => void onAddBookmark());
+  const addGroup = smallButton(t('bm.addGroup'), t('bm.addGroupTip'), () => void onAddGroup());
+  const { root, body } = widgetFrame(widget, t('bm.title'), [addLink, addGroup]);
 
   if (page.groups.length === 0) {
     addLink.disabled = true;
-    body.append(el('p', { class: 'muted', text: 'No groups yet. Create one with “+ Group”.' }));
+    body.append(el('p', { class: 'muted', text: t('bm.noGroups') }));
     return root;
   }
 
@@ -63,9 +65,9 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page): HTMLEle
   // ---- actions ----
   async function onAddGroup(): Promise<void> {
     const values = await openFormDialog({
-      title: 'New group',
-      submitLabel: 'Create',
-      fields: [{ name: 'title', label: 'Group name', required: true }],
+      title: t('bm.newGroup'),
+      submitLabel: t('common.create'),
+      fields: [{ name: 'title', label: t('bm.groupName'), required: true }],
     });
     if (!values) return;
     const id = uid();
@@ -75,9 +77,9 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page): HTMLEle
 
   async function onRenameGroup(): Promise<void> {
     const values = await openFormDialog({
-      title: 'Rename group',
-      submitLabel: 'Save',
-      fields: [{ name: 'title', label: 'Group name', value: activeGroup.title, required: true }],
+      title: t('bm.renameGroup'),
+      submitLabel: t('common.save'),
+      fields: [{ name: 'title', label: t('bm.groupName'), value: activeGroup.title, required: true }],
     });
     if (!values) return;
     await updatePage(page.id, (p) => ops.renameGroup(p, activeGroup.id, values.title!));
@@ -86,9 +88,9 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page): HTMLEle
   async function onDeleteGroup(): Promise<void> {
     if (activeGroup.bookmarks.length > 0) {
       const ok = await confirmDialog({
-        title: 'Delete group?',
-        message: `“${activeGroup.title}” and its ${activeGroup.bookmarks.length} bookmark(s) will be deleted.`,
-        confirmLabel: 'Delete',
+        title: t('bm.deleteGroupTitle'),
+        message: t('bm.deleteGroupMessage', { title: activeGroup.title, count: activeGroup.bookmarks.length }),
+        confirmLabel: t('common.delete'),
       });
       if (!ok) return;
     }
@@ -96,16 +98,20 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page): HTMLEle
   }
 
   async function onAddBookmark(): Promise<void> {
-    const data = await askBookmark('New bookmark', 'Add');
+    const data = await askBookmark(t('bm.newBookmark'), t('common.add'));
     if (!data) return;
     const bookmark: Bookmark = { id: uid(), createdAt: Date.now(), ...data };
     await updatePage(page.id, (p) => ops.addBookmark(p, activeGroup.id, bookmark));
   }
 
   async function onEditBookmark(bookmark: Bookmark): Promise<void> {
-    const data = await askBookmark('Edit bookmark', 'Save', bookmark);
+    const data = await askBookmark(t('bm.editBookmark'), t('common.save'), bookmark);
     if (!data) return;
-    await updatePage(page.id, (p) => ops.updateBookmark(p, activeGroup.id, bookmark.id, data));
+    // A new address may have another icon: forget the old one
+    await updatePage(page.id, (p) => {
+      const updated = ops.updateBookmark(p, activeGroup.id, bookmark.id, data);
+      return data.url !== bookmark.url ? ops.clearFavicon(updated, bookmark.id) : updated;
+    });
   }
 
   // ---- group tabs ----
@@ -117,12 +123,12 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page): HTMLEle
     const tab = el('span', {
       class: isActive ? 'tab active' : 'tab',
       text: group.title,
-      attrs: { role: 'tab', tabindex: '0', 'aria-selected': String(isActive), 'data-group-id': group.id, title: 'Drag to reorder' },
+      attrs: { role: 'tab', tabindex: '0', 'aria-selected': String(isActive), 'data-group-id': group.id, title: t('bm.dragTab') },
     });
     const select = (): void => {
       activeGroupByWidget.set(widget.id, group.id);
       // Re-render this widget only; selection is UI state and is not persisted
-      root.replaceWith(renderBookmarksWidget(widget, page));
+      root.replaceWith(renderBookmarksWidget(widget, page, siteIcons));
     };
     tab.addEventListener('click', select);
     tab.addEventListener('keydown', (event) => {
@@ -144,27 +150,26 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page): HTMLEle
   const tabs = el('div', { class: 'tabs' }, [
     tabList,
     el('span', { class: 'tab-actions' }, [
-      smallButton('✎', 'Rename group', () => void onRenameGroup()),
-      smallButton('✕', 'Delete group', () => void onDeleteGroup()),
+      smallButton('✎', t('bm.renameGroup'), () => void onRenameGroup()),
+      smallButton('✕', t('bm.deleteGroup'), () => void onDeleteGroup()),
     ]),
   ]);
 
   // ---- bookmark list ----
   const list = el('ul', { class: 'links' });
   if (activeGroup.bookmarks.length === 0) {
-    list.append(el('li', { class: 'muted empty', text: 'This group is empty' }));
+    list.append(el('li', { class: 'muted empty', text: t('bm.empty') }));
   }
   for (const bookmark of activeGroup.bookmarks) {
-    const letter = (bookmark.title.trim()[0] ?? '?').toUpperCase();
     const link = el('a', { attrs: { href: bookmark.url, title: bookmark.url, draggable: 'false' } }, [
-      el('span', { class: 'ico', text: letter }),
+      bookmarkIcon(bookmark, siteIcons),
       el('span', { class: 'link-title', text: bookmark.title }),
     ]);
     const row = el('li', { class: 'link-row', attrs: { 'data-bookmark-id': bookmark.id } }, [
       link,
       el('span', { class: 'row-actions' }, [
-        smallButton('✎', 'Edit bookmark', () => void onEditBookmark(bookmark)),
-        smallButton('✕', 'Delete bookmark', () => {
+        smallButton('✎', t('bm.editBookmark'), () => void onEditBookmark(bookmark)),
+        smallButton('✕', t('bm.deleteBookmark'), () => {
           void updatePage(page.id, (p) => ops.deleteBookmark(p, activeGroup.id, bookmark.id));
         }),
       ]),

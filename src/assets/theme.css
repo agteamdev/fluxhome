@@ -1,5 +1,8 @@
 /* Shared theme variables (new tab page and popup) */
 :root {
+  /* 1 = solid cards, 0 = fully transparent (set from the settings) */
+  --card-alpha: 1;
+  --card-bg: color-mix(in srgb, var(--surface) calc(var(--card-alpha) * 100%), transparent);
   --bg: #f4f5f7;
   --surface: #ffffff;
   --text: #1c2030;

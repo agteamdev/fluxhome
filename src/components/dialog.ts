@@ -1,6 +1,7 @@
 import { createDatePicker } from './date-picker';
 import { el } from './dom';
 import { createSelect } from './select';
+import { t } from '@/lib/i18n';
 
 export interface FormField {
   name: string;
@@ -15,6 +16,8 @@ export interface FormField {
   rows?: number;
   /** Shows a drop-down with these options. */
   options?: { value: string; label: string }[];
+  /** Adds a filter box to the drop-down (useful for long lists). */
+  searchable?: boolean;
 }
 
 export interface FormDialogOptions {
@@ -37,11 +40,12 @@ function createControl(field: FormField): Control {
       items: field.options,
       value: field.value ?? field.options[0]!.value,
       ariaLabel: field.label,
+      searchable: field.searchable,
     });
     return { element: select.element, getValue: () => select.value };
   }
   if (field.type === 'date') {
-    const picker = createDatePicker({ value: field.value ?? '', placeholder: field.placeholder ?? 'No date', ariaLabel: field.label });
+    const picker = createDatePicker({ value: field.value ?? '', placeholder: field.placeholder ?? t('common.noDate'), ariaLabel: field.label });
     return { element: picker.element, getValue: () => picker.value };
   }
   if (field.multiline) {
@@ -72,7 +76,7 @@ export function openFormDialog(options: FormDialogOptions): Promise<Record<strin
       form.append(el('label', { class: 'dialog-field' }, [el('span', { text: field.label }), control.element]));
     }
 
-    const cancel = el('button', { class: 'btn', text: 'Cancel', attrs: { type: 'button' } });
+    const cancel = el('button', { class: 'btn', text: t('common.cancel'), attrs: { type: 'button' } });
     const submit = el('button', { class: 'btn primary', text: options.submitLabel, attrs: { type: 'submit' } });
     form.append(error, el('div', { class: 'dialog-buttons' }, [cancel, submit]));
     dialog.append(form);
@@ -87,7 +91,7 @@ export function openFormDialog(options: FormDialogOptions): Promise<Record<strin
       let message: string | null = null;
       for (const field of options.fields) {
         if (field.required && !values[field.name]) {
-          message = `${field.label} is required`;
+          message = t('common.required', { field: field.label });
           break;
         }
       }
@@ -123,7 +127,7 @@ export interface ConfirmOptions {
 export function confirmDialog(options: ConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {
     const dialog = el('dialog', { class: 'dialog' });
-    const cancel = el('button', { class: 'btn', text: 'Cancel', attrs: { type: 'button' } });
+    const cancel = el('button', { class: 'btn', text: t('common.cancel'), attrs: { type: 'button' } });
     const confirm = el('button', { class: 'btn danger', text: options.confirmLabel, attrs: { type: 'button' } });
     dialog.append(
       el('div', { class: 'dialog-form' }, [
@@ -163,7 +167,7 @@ export function openContentDialog(options: ContentDialogOptions): Promise<string
     let result: string | null = null;
 
     const buttons = el('div', { class: 'dialog-buttons' });
-    const close = el('button', { class: 'btn', text: 'Close', attrs: { type: 'button' } });
+    const close = el('button', { class: 'btn', text: t('common.close'), attrs: { type: 'button' } });
     close.addEventListener('click', () => dialog.close());
     buttons.append(close);
     for (const action of options.actions) {
