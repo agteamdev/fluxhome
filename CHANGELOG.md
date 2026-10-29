@@ -2,6 +2,14 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.10.1
+
+- Bookmarks, notes and tasks use the full width of the card: the edit/delete buttons now float over the row on hover instead of reserving space. Long titles may take two lines.
+- The star of a pinned note sits in front of its title.
+- Scrollbars match the extension theme; native controls follow the chosen theme (`color-scheme`).
+- Smaller background swatches in the settings.
+- README: "Support Development" section; GitHub Sponsor button (Patreon).
+
 ## 0.10.0
 
 - Languages: English and Russian; choose in Settings (or follow the browser). New languages are added by dropping a JSON file into `src/locales` (see `docs/TRANSLATING.md`); `npm run check:locales` validates translations.

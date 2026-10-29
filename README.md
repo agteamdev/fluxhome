@@ -53,6 +53,16 @@ Requires Firefox 140 or newer. Firefox for Android does not support new tab over
 
 [Semantic Versioning](https://semver.org). See [CHANGELOG.md](CHANGELOG.md).
 
+## Support Development
+
+My open-source projects are built independently and remain accessible to everyone.
+
+If you find these tools useful and would like to support their continued development, maintenance, and new features, you can support me on Patreon.
+
+Every contribution helps me dedicate more time to building and improving open-source software.
+
+[Support on Patreon](https://www.patreon.com/al3xg0r)
+
 ## License
 
 [MIT](LICENSE)

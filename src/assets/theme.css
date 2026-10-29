@@ -32,3 +32,25 @@
 }
 
 [hidden] { display: none !important; }
+
+/* Native controls (and the page scrollbar) follow the chosen theme */
+:root { color-scheme: light dark; }
+:root[data-theme='light'] { color-scheme: light; }
+:root[data-theme='dark'] { color-scheme: dark; }
+
+/* Scrollbars in the extension design: thin, no arrows, a soft thumb */
+:root,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted) 55%, transparent) transparent;
+}
+/* Older Chromium versions do not know scrollbar-color */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--muted) 55%, transparent);
+    border-radius: 999px; border: 2px solid transparent; background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); background-clip: padding-box; }
+}

@@ -81,23 +81,25 @@ export function renderNotesWidget(widget: WidgetConfig, notes: Note[]): HTMLElem
 
   const list = el('ul', { class: 'notes' });
   for (const note of sortNotes(notes)) {
+    // A pinned note gets a small star in front of its title; the buttons appear on hover
+    const titleParts: Node[] = [];
+    if (note.pinned) titleParts.push(el('span', { class: 'pin-mark', text: '★', attrs: { 'data-tip': t('note.pinned') } }));
+    titleParts.push(document.createTextNode(note.title));
     const main = el('button', { class: 'note-main', attrs: { type: 'button' } }, [
-      el('span', { class: 'note-title', text: note.title }),
+      el('span', { class: 'note-title' }, titleParts),
       el('span', { class: 'note-preview', text: notePreview(note) }),
     ]);
     main.addEventListener('click', () => void onOpen(note));
 
-    const children: HTMLElement[] = [main];
-    // A pinned note keeps a visible star; all buttons below appear only on hover
-    if (note.pinned) children.push(el('span', { class: 'pin-mark', text: '★', attrs: { 'data-tip': t('note.pinned') } }));
-    children.push(
+    const children: HTMLElement[] = [
+      main,
       el('span', { class: 'row-actions' }, [
         smallButton(note.pinned ? '★' : '☆', note.pinned ? t('note.unpin') : t('note.pin'), () => {
           void updateNotes((l) => togglePin(l, note.id));
         }),
         smallButton('✕', t('note.deleteTip'), () => void onDelete(note)),
       ]),
-    );
+    ];
     list.append(el('li', { class: 'note-row' }, children));
   }
   body.append(list);
