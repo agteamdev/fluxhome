@@ -2,7 +2,7 @@
   "name": "fluxhome",
   "description": "FluxHome — a local-first start page (new tab) with no cloud and no telemetry",
   "private": true,
-  "version": "0.10.1",
+  "version": "0.11.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -18,7 +18,9 @@
     "lint:firefox": "npm run build:firefox && npx --yes web-ext lint --source-dir .output/firefox-mv3",
     "check": "node scripts/check-build.mjs",
     "verify": "npm run lint && npm run typecheck && npm test && npm run check:locales && npm run build && npm run build:firefox && npm run check",
-    "check:locales": "node scripts/check-locales.mjs"
+    "check:locales": "node scripts/check-locales.mjs",
+    "package": "npm run verify && npm run zip && npm run zip:firefox",
+    "package:firefox": "npm run verify && npm run zip:firefox"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -29,5 +31,16 @@
     "vitest": "^3.0.0",
     "wxt": "^0.20.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "homepage": "https://github.com/agteamdev/fluxhome",
+  "bugs": {
+    "url": "https://github.com/agteamdev/fluxhome/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agteamdev/fluxhome.git"
+  }
 }

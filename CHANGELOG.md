@@ -2,6 +2,17 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.11.1
+
+- Fix: rows of bookmarks, notes and tasks are highlighted on hover with fully transparent cards too (the highlight now works over any background); the edit/delete buttons float as a small solid toolbar.
+- Store screenshots for Firefox with captions; publishing guide updated: Firefox first, Chrome and Edge later.
+
+## 0.11.0
+
+- Store preparation: privacy policy (`PRIVACY.md`), listing texts in English and Russian, promo images, publishing checklist (`store/`).
+- Extension name and description are localized (`public/_locales`), so the stores and the browser show them in the user's language.
+- `npm run package` runs all checks and builds the store packages for Chromium and Firefox.
+
 ## 0.10.1
 
 - Bookmarks, notes and tasks use the full width of the card: the edit/delete buttons now float over the row on hover instead of reserving space. Long titles may take two lines.

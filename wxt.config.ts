@@ -25,9 +25,13 @@ export default defineConfig({
   srcDir: 'src',
   // WXT builds Firefox as Manifest V2 by default; we want Manifest V3 everywhere
   manifestVersion: 3,
+  // Name of the .zip files: fluxhome-<version>-<browser>.zip (the manifest name is a translation placeholder)
+  zip: { name: 'fluxhome' },
   manifest: ({ browser }) => ({
-    name: 'FluxHome',
-    description: 'Local-first start page: bookmarks, notes, todos. No cloud, no telemetry.',
+    // Name and description come from public/_locales/<language>/messages.json (shown in the stores and the browser)
+    default_locale: 'en',
+    name: '__MSG_extName__',
+    description: '__MSG_extDescription__',
     // Only what is used today:
     //  - storage: all data stays in the browser
     //  - activeTab: the toolbar popup reads the title/address of the current tab when you click it

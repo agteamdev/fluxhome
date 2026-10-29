@@ -3,6 +3,8 @@
   /* 1 = solid cards, 0 = fully transparent (set from the settings) */
   --card-alpha: 1;
   --card-bg: color-mix(in srgb, var(--surface) calc(var(--card-alpha) * 100%), transparent);
+  /* Row highlight that works on any card transparency and any background */
+  --hover: color-mix(in srgb, var(--text) 11%, transparent);
   --bg: #f4f5f7;
   --surface: #ffffff;
   --text: #1c2030;

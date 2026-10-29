@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "FluxHome",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Local-first start page: bookmarks, notes, tasks and clocks. No cloud, no ads, no telemetry.",
+    "description": "Extension description (max 132 characters)"
+  }
+}

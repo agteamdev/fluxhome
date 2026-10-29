@@ -49,6 +49,14 @@ Requires Firefox 140 or newer. Firefox for Android does not support new tab over
 - `src/utils/` — helpers
 - `public/icons/` — extension icons (16/32/48/96/128), copied into the build as-is
 
+## Privacy
+
+FluxHome collects nothing and has no servers. See [PRIVACY.md](PRIVACY.md).
+
+## Publishing
+
+Store listing texts, images and the publishing checklist are in [store/](store/README.md).
+
 ## Versioning
 
 [Semantic Versioning](https://semver.org). See [CHANGELOG.md](CHANGELOG.md).

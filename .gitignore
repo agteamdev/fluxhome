@@ -6,3 +6,7 @@ dist/
 .env
 .DS_Store
 *.zip
+
+# Raw screenshots may contain personal data
+store/screenshots/raw/*
+!store/screenshots/raw/.gitkeep

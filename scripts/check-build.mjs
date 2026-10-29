@@ -31,8 +31,28 @@ function checkBuild(name, dir, { firefox }) {
   const has = (rel) => existsSync(join(dir, rel));
 
   m.manifest_version === 3 ? ok(name, 'Manifest V3') : fail(name, `manifest_version is ${m.manifest_version}`);
+  // Name and description may be translation placeholders (__MSG_key__): resolve them from _locales
+  const messages = (locale) => {
+    const file = join(dir, '_locales', locale, 'messages.json');
+    return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null;
+  };
+  const resolve = (value) => {
+    const match = /^__MSG_(\w+)__$/.exec(value ?? '');
+    return match ? (messages(m.default_locale)?.[match[1]]?.message ?? '') : value;
+  };
   for (const key of ['name', 'version', 'description']) {
-    m[key] ? ok(name, `${key}: ${m[key]}`) : fail(name, `missing ${key}`);
+    const value = resolve(m[key]);
+    value ? ok(name, `${key}: ${value}`) : fail(name, `missing or unresolved ${key}`);
+  }
+  if (String(m.name).startsWith('__MSG_') || String(m.description).startsWith('__MSG_')) {
+    m.default_locale && messages(m.default_locale) ? ok(name, `default_locale: ${m.default_locale}`) : fail(name, 'default_locale missing or has no messages.json');
+    const description = resolve(m.description) ?? '';
+    description.length <= 132 ? ok(name, `description length ${description.length} (max 132)`) : fail(name, `description is ${description.length} characters (max 132)`);
+    const dirs = existsSync(join(dir, '_locales')) ? readdirSync(join(dir, '_locales')) : [];
+    const base = Object.keys(messages(m.default_locale) ?? {}).sort().join();
+    for (const locale of dirs) {
+      Object.keys(messages(locale) ?? {}).sort().join() === base ? ok(name, `_locales/${locale} matches ${m.default_locale}`) : fail(name, `_locales/${locale} has different keys than ${m.default_locale}`);
+    }
   }
 
   const newtab = m.chrome_url_overrides?.newtab;

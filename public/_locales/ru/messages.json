@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "FluxHome",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Локальная стартовая страница: закладки, заметки, задачи и часы. Без облака, рекламы и телеметрии.",
+    "description": "Extension description (max 132 characters)"
+  }
+}

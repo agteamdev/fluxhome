@@ -32,7 +32,7 @@ body {
   padding: 8px; border-radius: 8px;
   color: var(--text); text-decoration: none;
 }
-.hit:hover, .hit:focus-visible { background: var(--bg); }
+.hit:hover, .hit:focus-visible { background: var(--hover); }
 .hit-text { display: flex; flex-direction: column; min-width: 0; }
 .hit-title { font-size: 14px; }
 .hit-meta { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -76,7 +76,7 @@ body {
   font: inherit; font-size: 14px;
   cursor: pointer;
 }
-.btn:hover:not(:disabled) { background: var(--bg); }
+.btn:hover:not(:disabled) { background: var(--hover); }
 .btn:disabled { opacity: 0.4; cursor: default; }
 .btn.small { padding: 2px 8px; font-size: 12px; color: var(--muted); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -107,7 +107,7 @@ body {
 /* Bookmark list */
 .links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; min-height: 36px; }
 .link-row { position: relative; display: flex; align-items: center; border-radius: 8px; }
-.link-row:hover { background: var(--bg); }
+.link-row:hover { background: var(--hover); }
 .link-row.dragging { opacity: 0.4; }
 .link-row a {
   display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
@@ -122,8 +122,9 @@ body {
 /* Edit/delete buttons float over the end of the row, so the text can use the whole width */
 .row-actions {
   position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
-  display: flex; gap: 2px; padding: 2px 4px 2px 22px; border-radius: 8px;
-  background: linear-gradient(90deg, transparent, var(--bg) 18px);
+  display: flex; gap: 2px; padding: 2px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   opacity: 0; pointer-events: none;
 }
 .link-row:hover .row-actions, .link-row:focus-within .row-actions,
@@ -187,7 +188,7 @@ body {
 /* Notes */
 .notes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .note-row { position: relative; display: flex; align-items: center; border-radius: 8px; }
-.note-row:hover { background: var(--bg); }
+.note-row:hover { background: var(--hover); }
 .note-main {
   flex: 1; min-width: 0;
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
@@ -223,7 +224,7 @@ body {
 .todo-add-row .select { flex: 1; min-width: 0; }
 .todos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .todo { position: relative; display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 8px; }
-.todo:hover { background: var(--bg); }
+.todo:hover { background: var(--hover); }
 .todo-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
 .todo-text { overflow-wrap: anywhere; }
 .todo.done .todo-text { text-decoration: line-through; color: var(--muted); }
