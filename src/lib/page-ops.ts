@@ -1,4 +1,4 @@
-import type { Bookmark, BookmarkGroup, Page, WidgetConfig, WidgetType } from './types';
+import type { Bookmark, BookmarkGroup, GroupIcon, Page, WidgetConfig, WidgetType } from './types';
 import { normalizeUrl } from '@/utils/url';
 
 /**
@@ -135,7 +135,7 @@ export function applyWidgetSelection(
   columnLimit: number,
   newId: () => string,
 ): Page {
-  const all: WidgetType[] = ['bookmarks', 'clock', 'notes', 'todos'];
+  const all: WidgetType[] = ['bookmarks', 'clock', 'notes', 'todos', 'timers', 'worktime', 'calendar'];
   let result = page;
   for (const type of all) {
     const present = result.widgets.some((w) => w.type === type);
@@ -240,4 +240,39 @@ export function clearFavicon(page: Page, bookmarkId: string): Page {
       }),
     })),
   };
+}
+
+/** Smallest share of the two neighbouring columns that one of them may get when it is resized. */
+export const MIN_COLUMN_SHARE = 0.2;
+
+/**
+ * Moves the border between two neighbouring columns.
+ * `leftShare` (0..1) is the part of their combined width that the left column should get.
+ * The combined width stays the same, so the other columns do not move.
+ */
+export function resizeColumns(page: Page, leftId: string, rightId: string, leftShare: number): Page {
+  const left = page.columns.find((c) => c.id === leftId);
+  const right = page.columns.find((c) => c.id === rightId);
+  if (!left || !right || left.width.unit !== '%' || right.width.unit !== '%') return page;
+
+  const total = left.width.value + right.width.value;
+  const share = Math.min(1 - MIN_COLUMN_SHARE, Math.max(MIN_COLUMN_SHARE, leftShare));
+  const leftValue = Math.round(total * share * 1000) / 1000;
+  const rightValue = Math.round((total - leftValue) * 1000) / 1000;
+  return {
+    ...page,
+    columns: page.columns.map((c) =>
+      c.id === leftId ? { ...c, width: { ...c.width, value: leftValue } } : c.id === rightId ? { ...c, width: { ...c.width, value: rightValue } } : c,
+    ),
+  };
+}
+
+/** Sets or removes (null) the icon of a group. */
+export function setGroupIcon(page: Page, groupId: string, icon: GroupIcon | null): Page {
+  return mapGroup(page, groupId, (g) => {
+    const copy = { ...g };
+    if (icon) copy.icon = icon;
+    else delete copy.icon;
+    return copy;
+  });
 }

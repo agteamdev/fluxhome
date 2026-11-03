@@ -38,6 +38,10 @@ export function createDefaultData(labels: DefaultLabels = ENGLISH): StorageSchem
     activePageId: pageId,
     notes: [],
     todos: [],
+    timeEntries: [],
+    activeTracker: null,
+    countdown: null,
+    events: [],
     pages: [
       {
         id: pageId,

@@ -13,7 +13,7 @@ It is built for people who want to keep control of their data.
 
 ## What is stored, and where
 
-Your bookmarks, groups, notes, tasks, settings and (optionally) small site icons are saved with the browser's
+Your bookmarks, groups (with their icons), notes, tasks, work-time sessions, calendar events, settings and (optionally) small site icons and a background picture you chose are saved with the browser's
 extension storage (`storage.local`). This data never leaves your device unless you export it yourself.
 
 - **Export** creates a JSON file that you save wherever you choose. **Import** reads a JSON file that you pick.
@@ -33,6 +33,7 @@ FluxHome makes network requests only in these cases, and only because of somethi
    No third-party icon service is used. Each site sees an ordinary request, like when you visit it.
    The icons are shrunk and saved locally. Switching the option off returns the website permission to the browser.
 3. **Background images (optional).** If you set a background image by web address, the browser loads that image from the address you gave.
+   A picture you choose from your computer is resized inside the browser and saved in the extension storage; it is never uploaded anywhere.
 
 FluxHome does not contact any server operated by its authors.
 
@@ -44,6 +45,7 @@ FluxHome does not contact any server operated by its authors.
 | `activeTab` | When you click the toolbar button, the popup reads the title and address of the current tab so you can save it. It is not used otherwise. |
 | `contextMenus` | Adds "Save link to FluxHome" and "Save this page to FluxHome" to the right-click menu. |
 | Access to websites (optional) | Requested only if you turn on site icons, to download each site's own icon. |
+| Alarms and notifications (optional) | Requested only if you turn on "notify me when the time is up" for the countdown timer, so the browser can show a notification even when no FluxHome tab is open. |
 | New tab page override | Shows FluxHome instead of the default new tab page. |
 
 FluxHome does not read your browsing history, your browser's own bookmarks, your cookies, or the content of the pages you visit.

@@ -39,6 +39,8 @@ export default defineConfig({
     // Access to websites is optional: it is requested only if you turn on "site icons" in the settings.
     permissions: ['storage', 'activeTab', 'contextMenus'],
     optional_host_permissions: ['<all_urls>'],
+    // Asked for only when the user turns on notifications for the countdown timer
+    optional_permissions: ['alarms', 'notifications'],
     // Listed explicitly (files live in public/icons) instead of relying on automatic detection
     icons: {
       16: 'icons/16.png',

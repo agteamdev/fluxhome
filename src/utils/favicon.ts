@@ -1,3 +1,5 @@
+import { blobToDataUrl } from './blob';
+
 /**
  * Finding and downloading site icons.
  * Icons are requested directly from the bookmarked site (never from a third-party icon service),
@@ -41,15 +43,6 @@ export function parseIconLinks(html: string, baseUrl: string): string[] {
   }
   found.sort((a, b) => a.score - b.score);
   return [...new Set(found.map((f) => f.url))];
-}
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
 }
 
 async function download(url: string): Promise<Response | null> {

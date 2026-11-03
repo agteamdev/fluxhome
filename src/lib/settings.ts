@@ -53,9 +53,17 @@ export function findPreset(background: Background): BackgroundPreset | undefined
 
 /**
  * Decides the final background from the dialog state. On failure `error` is a translation key.
- * A filled image URL wins over the chosen preset; the URL must be http(s).
+ * An uploaded picture wins, then a filled image URL (must be http(s)), then the chosen preset.
  */
-export function resolveBackground(preset: Background | null, imageUrl: string): { background: Background } | { error: string } {
+export function resolveBackground(
+  preset: Background | null,
+  imageUrl: string,
+  uploaded: string | null = null,
+): { background: Background } | { error: string } {
+  // A picture chosen from the computer wins over everything else
+  if (uploaded) {
+    return isBackgroundDataUrl(uploaded) ? { background: { type: 'image', value: uploaded } } : { error: 'settings.imageBad' };
+  }
   const text = imageUrl.trim();
   if (text) {
     const url = normalizeUrl(text);
@@ -66,3 +74,33 @@ export function resolveBackground(preset: Background | null, imageUrl: string): 
 }
 
 export const MAX_COLUMNS = 4;
+
+/** Largest accepted picture from the computer, as characters of its data URL (about 2.2 MB of image). */
+export const MAX_BACKGROUND_CHARS = 3_000_000;
+
+const BACKGROUND_DATA_URL = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+/** True for a picture stored in the settings (a small "data:" URL of a PNG, JPEG or WebP). */
+export function isBackgroundDataUrl(value: string): boolean {
+  return value.length <= MAX_BACKGROUND_CHARS && BACKGROUND_DATA_URL.test(value);
+}
+
+const DEFAULT_BACKGROUND: Background = { type: 'solid', value: '' };
+
+/**
+ * Checks a background that comes from outside (an imported file) and returns a safe one.
+ * Only plain colors, plain linear gradients (no url()) and pictures (http(s) address or small data URL) are accepted.
+ */
+export function sanitizeBackground(type: unknown, value: unknown): Background {
+  const text = typeof value === 'string' ? value : '';
+  if (type === 'solid') return /^(#[0-9a-fA-F]{3,8})?$/.test(text) ? { type, value: text } : DEFAULT_BACKGROUND;
+  if (type === 'gradient') {
+    return /^linear-gradient\([^;{}]{1,200}\)$/.test(text) && !/url\s*\(/i.test(text) ? { type, value: text } : DEFAULT_BACKGROUND;
+  }
+  if (type === 'image') {
+    if (isBackgroundDataUrl(text)) return { type, value: text };
+    const url = normalizeUrl(text);
+    return url ? { type, value: url } : DEFAULT_BACKGROUND;
+  }
+  return DEFAULT_BACKGROUND;
+}

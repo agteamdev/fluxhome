@@ -7,6 +7,5 @@ dist/
 .DS_Store
 *.zip
 
-# Raw screenshots may contain personal data
-store/screenshots/raw/*
-!store/screenshots/raw/.gitkeep
+# Local developer settings (e.g. the path to your browser for `npm run dev`)
+web-ext.config.ts

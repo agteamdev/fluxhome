@@ -1,4 +1,5 @@
 import { el } from '@/components/dom';
+import { iconButton } from '@/components/icon-button';
 import { createSelect, type SelectItem } from '@/components/select';
 import {
   filterZones,
@@ -91,12 +92,7 @@ export function openClockSettings(current: ClockOptions): Promise<ClockOptions |
       }
       chips.replaceChildren(
         ...zones.map((zone) => {
-          const remove = el('button', {
-            class: 'btn small',
-            text: '✕',
-            attrs: { type: 'button', title: t('clock.remove'), 'aria-label': t('clock.removeZone', { zone: zoneLabel(zone) }) },
-          });
-          remove.addEventListener('click', () => {
+          const remove = iconButton('close', t('clock.removeZone', { zone: zoneLabel(zone) }), () => {
             zones = zones.filter((z) => z !== zone);
             refresh();
           });

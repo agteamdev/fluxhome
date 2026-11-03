@@ -15,6 +15,8 @@ import {
   moveGroup,
   moveWidget,
   renameGroup,
+  resizeColumns,
+  setGroupIcon,
   setColumnCount,
   updateBookmark,
   updateWidgetProps,
@@ -221,5 +223,34 @@ describe('clearFavicon', () => {
     const cleared = clearFavicon(page, 'a');
     expect(cleared.groups[0]!.bookmarks[0]!.favicon).toBe(undefined);
     expect(cleared.groups[0]!.bookmarks[1]!.favicon).toBe('data:image/png;base64,BB');
+  });
+});
+
+describe('resizeColumns', () => {
+  it('moves the border and keeps the combined width', () => {
+    const page = resizeColumns(makePage(), 'c1', 'c2', 0.75);
+    expect(page.columns[0]!.width.value).toBe(1.5);
+    expect(page.columns[1]!.width.value).toBe(0.5);
+  });
+  it('limits how small a column can get', () => {
+    const page = resizeColumns(makePage(), 'c1', 'c2', 0.01);
+    expect(page.columns[0]!.width.value).toBe(0.4);
+    expect(page.columns[1]!.width.value).toBe(1.6);
+  });
+  it('ignores unknown columns and fixed-pixel columns', () => {
+    const page = makePage();
+    expect(resizeColumns(page, 'c1', 'nope', 0.5)).toBe(page);
+    const fixed = { ...page, columns: [{ id: 'c1', width: { value: 300, unit: 'px' as const } }, page.columns[1]!] };
+    expect(resizeColumns(fixed, 'c1', 'c2', 0.5)).toBe(fixed);
+  });
+});
+
+describe('setGroupIcon', () => {
+  it('sets and removes an icon', () => {
+    let page = setGroupIcon(makePage(), 'g1', { type: 'emoji', value: '🏠' });
+    expect(page.groups[0]!.icon).toEqual({ type: 'emoji', value: '🏠' });
+    expect(page.groups[1]!.icon).toBe(undefined);
+    page = setGroupIcon(page, 'g1', null);
+    expect(page.groups[0]!.icon).toBe(undefined);
   });
 });

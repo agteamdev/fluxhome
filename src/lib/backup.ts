@@ -3,18 +3,25 @@ import { migrateData } from './migrations';
 import {
   SCHEMA_VERSION,
   type Bookmark,
+  type ActiveTracker,
   type BookmarkGroup,
+  type CalendarEvent,
+  type Countdown,
   type ColumnConfig,
   type Note,
   type Page,
   type Settings,
   type StorageSchema,
+  type TimeEntry,
   type Todo,
   type WidgetConfig,
 } from './types';
 import { uid } from '@/utils/id';
+import { sanitizeGroupIcon } from './group-icon';
 import { parseEngine } from './search-engines';
-import { MAX_COLUMNS } from './settings';
+import { MAX_COLUMNS, sanitizeBackground } from './settings';
+import { parseValue } from '@/utils/calendar';
+import { formatTimeInput, parseTimeInput } from '@/utils/date';
 import { hostnameOf, normalizeUrl } from '@/utils/url';
 
 /**
@@ -104,9 +111,12 @@ interface Context {
 }
 
 const THEMES = ['light', 'dark', 'auto'] as const;
-const BACKGROUNDS = ['solid', 'image', 'gradient'] as const;
 const PRIORITIES = ['low', 'medium', 'high'] as const;
-const WIDGET_TYPES = ['bookmarks', 'notes', 'todos', 'clock'] as const;
+const WIDGET_TYPES = ['bookmarks', 'notes', 'todos', 'clock', 'timers', 'worktime', 'calendar'] as const;
+const REPEATS = ['none', 'daily', 'weekly', 'monthly', 'yearly'] as const;
+const MAX_ENTRIES = 20_000;
+const MAX_EVENTS = 5_000;
+const MAX_SESSION_MS = 7 * 24 * 3_600_000;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -155,7 +165,10 @@ function sanitizeGroup(raw: unknown, ctx: Context): BookmarkGroup | null {
   const bookmarks = asArray(raw.bookmarks)
     .map((b) => sanitizeBookmark(b, ctx))
     .filter((b): b is Bookmark => b !== null);
-  return { id: uniqueId(raw.id, ctx), title: str(raw.title, 'Untitled group').trim() || 'Untitled group', bookmarks };
+  const group: BookmarkGroup = { id: uniqueId(raw.id, ctx), title: str(raw.title, 'Untitled group').trim() || 'Untitled group', bookmarks };
+  const icon = sanitizeGroupIcon(raw.icon);
+  if (icon) group.icon = icon;
+  return group;
 }
 
 function sanitizeColumn(raw: unknown, ctx: Context): ColumnConfig {
@@ -236,6 +249,45 @@ function sanitizeTodo(raw: unknown, ctx: Context): Todo | null {
   return todo;
 }
 
+const isTimestamp = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
+
+function sanitizeTimeEntry(raw: unknown, ctx: Context): TimeEntry | null {
+  if (!isRecord(raw) || !isTimestamp(raw.start) || !isTimestamp(raw.end) || raw.end <= raw.start || raw.end - raw.start > MAX_SESSION_MS) {
+    ctx.dropped++;
+    return null;
+  }
+  const entry: TimeEntry = { id: uniqueId(raw.id, ctx), label: str(raw.label, '').trim().slice(0, 200), start: raw.start, end: raw.end };
+  // Pauses cannot be longer than the session itself
+  if (typeof raw.pausedMs === 'number' && Number.isFinite(raw.pausedMs) && raw.pausedMs > 0 && raw.pausedMs < raw.end - raw.start) entry.pausedMs = raw.pausedMs;
+  return entry;
+}
+
+function sanitizeActiveTracker(raw: unknown): ActiveTracker | null {
+  if (!isRecord(raw) || !isTimestamp(raw.start)) return null;
+  const tracker: ActiveTracker = { label: str(raw.label, '').trim().slice(0, 200), start: raw.start };
+  if (typeof raw.pausedMs === 'number' && Number.isFinite(raw.pausedMs) && raw.pausedMs > 0) tracker.pausedMs = raw.pausedMs;
+  if (isTimestamp(raw.pausedAt)) tracker.pausedAt = raw.pausedAt;
+  return tracker;
+}
+
+function sanitizeCountdown(raw: unknown): Countdown | null {
+  if (!isRecord(raw) || !isTimestamp(raw.end) || typeof raw.durationMs !== 'number') return null;
+  if (!Number.isFinite(raw.durationMs) || raw.durationMs < 60_000 || raw.durationMs > 720 * 60_000) return null;
+  return { end: raw.end, durationMs: raw.durationMs, label: str(raw.label, '').trim().slice(0, 200) };
+}
+
+function sanitizeEvent(raw: unknown, ctx: Context): CalendarEvent | null {
+  const title = isRecord(raw) ? str(raw.title, '').trim().slice(0, 200) : '';
+  if (!isRecord(raw) || !title || typeof raw.date !== 'string' || !parseValue(raw.date)) {
+    ctx.dropped++;
+    return null;
+  }
+  const event: CalendarEvent = { id: uniqueId(raw.id, ctx), title, date: raw.date, repeat: oneOf(raw.repeat, REPEATS, 'none') };
+  const minutes = typeof raw.time === 'string' ? parseTimeInput(raw.time) : undefined;
+  if (minutes !== undefined) event.time = formatTimeInput(new Date(2000, 0, 1, 0, minutes).getTime());
+  return event;
+}
+
 function sanitizeSettings(raw: unknown): Settings {
   const d = createDefaultData().settings;
   const s = isRecord(raw) ? raw : {};
@@ -243,7 +295,7 @@ function sanitizeSettings(raw: unknown): Settings {
   const columnsCount = Math.round(num(s.columnsCount, d.columnsCount));
   return {
     theme: oneOf(s.theme, THEMES, d.theme),
-    background: { type: oneOf(bg.type, BACKGROUNDS, d.background.type), value: str(bg.value, d.background.value) },
+    background: sanitizeBackground(bg.type, bg.value),
     showGreeting: bool(s.showGreeting, d.showGreeting),
     userName: str(s.userName, d.userName),
     greetingByTime: bool(s.greetingByTime, d.greetingByTime),
@@ -271,6 +323,15 @@ function sanitize(data: Record<string, unknown>, sourceVersion: number): ImportR
     .map((t) => sanitizeTodo(t, ctx))
     .filter((t): t is Todo => t !== null);
 
+  const timeEntries = asArray(data.timeEntries)
+    .map((e) => sanitizeTimeEntry(e, ctx))
+    .filter((e): e is TimeEntry => e !== null)
+    .slice(-MAX_ENTRIES);
+  const events = asArray(data.events)
+    .map((e) => sanitizeEvent(e, ctx))
+    .filter((e): e is CalendarEvent => e !== null)
+    .slice(0, MAX_EVENTS);
+
   const activePageId =
     typeof data.activePageId === 'string' && pages.some((p) => p.id === data.activePageId)
       ? data.activePageId
@@ -283,6 +344,10 @@ function sanitize(data: Record<string, unknown>, sourceVersion: number): ImportR
     activePageId,
     notes,
     todos,
+    timeEntries,
+    activeTracker: sanitizeActiveTracker(data.activeTracker),
+    countdown: sanitizeCountdown(data.countdown),
+    events,
   };
 
   return {

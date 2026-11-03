@@ -4,8 +4,9 @@ import { renderSearch } from './search-bar';
 import { renderSettingsButton } from './settings-dialog';
 import { renderWebSearchBar } from './web-search-bar';
 import { t } from '@/lib/i18n';
+import { attachColumnResizers, gridTemplate } from './column-resizer';
 import { makeColumnDropZone } from './widget-dnd';
-import { moveWidget } from '@/lib/page-ops';
+import { moveWidget, resizeColumns } from '@/lib/page-ops';
 import { updatePage } from '@/lib/page-store';
 import { getGreeting } from '@/utils/greeting';
 import type { Page, Settings, StorageSchema } from '@/lib/types';
@@ -37,11 +38,9 @@ function applySettings(settings: Settings): void {
 function renderColumns(page: Page, columnsCount: number, ctx: WidgetContext): HTMLElement {
   const columns = page.columns.slice(0, columnsCount);
   const wrap = el('div', { class: 'columns' });
-  // '%' is treated as a proportion (fr), 'px' as a fixed width
-  wrap.style.gridTemplateColumns = columns
-    .map((c) => (c.width.unit === 'px' ? `${c.width.value}px` : `minmax(0, ${c.width.value}fr)`))
-    .join(' ');
+  wrap.style.gridTemplateColumns = gridTemplate(columns);
 
+  const columnEls: HTMLElement[] = [];
   for (const col of columns) {
     const colEl = el('div', { class: 'column', attrs: { 'data-column-id': col.id } });
     const widgets = page.widgets.filter((w) => w.columnId === col.id).sort((a, b) => a.order - b.order);
@@ -49,8 +48,12 @@ function renderColumns(page: Page, columnsCount: number, ctx: WidgetContext): HT
     makeColumnDropZone(colEl, (widgetId, beforeId) => {
       void updatePage(page.id, (p) => moveWidget(p, widgetId, col.id, beforeId));
     });
+    columnEls.push(colEl);
     wrap.append(colEl);
   }
+  attachColumnResizers(wrap, columnEls, columns, (leftId, rightId, share) => {
+    void updatePage(page.id, (p) => resizeColumns(p, leftId, rightId, share));
+  });
   return wrap;
 }
 
@@ -68,7 +71,16 @@ export function renderPage(root: HTMLElement, config: StorageSchema): void {
   const greeting = config.settings.showGreeting
     ? getGreeting(new Date(), config.settings.userName, config.settings.greetingByTime)
     : '';
-  const columns = renderColumns(page, config.settings.columnsCount, { page, notes: config.notes, todos: config.todos, siteIcons: config.settings.siteIcons });
+  const columns = renderColumns(page, config.settings.columnsCount, {
+      page,
+      notes: config.notes,
+      todos: config.todos,
+      timeEntries: config.timeEntries,
+      activeTracker: config.activeTracker,
+      countdown: config.countdown,
+      events: config.events,
+      siteIcons: config.settings.siteIcons,
+    });
   const search = renderSearch(page, columns, config.settings.siteIcons);
   const headerItems: HTMLElement[] = [];
   if (greeting) headerItems.push(el('h1', { text: greeting }));

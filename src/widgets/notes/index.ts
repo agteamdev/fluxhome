@@ -1,4 +1,5 @@
 import { el } from '@/components/dom';
+import { iconButton } from '@/components/icon-button';
 import { confirmDialog, openContentDialog, openFormDialog } from '@/components/dialog';
 import { renderMarkdown } from '@/components/markdown-view';
 import { widgetFrame } from '@/components/widget-frame';
@@ -94,10 +95,10 @@ export function renderNotesWidget(widget: WidgetConfig, notes: Note[]): HTMLElem
     const children: HTMLElement[] = [
       main,
       el('span', { class: 'row-actions' }, [
-        smallButton(note.pinned ? '★' : '☆', note.pinned ? t('note.unpin') : t('note.pin'), () => {
+        iconButton(note.pinned ? 'unpin' : 'pin', note.pinned ? t('note.unpin') : t('note.pin'), () => {
           void updateNotes((l) => togglePin(l, note.id));
         }),
-        smallButton('✕', t('note.deleteTip'), () => void onDelete(note)),
+        iconButton('delete', t('note.deleteTip'), () => void onDelete(note)),
       ]),
     ];
     list.append(el('li', { class: 'note-row' }, children));

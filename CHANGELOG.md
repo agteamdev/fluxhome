@@ -2,16 +2,35 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.14.0
+
+- The timers are split in two widgets: "Timers" (countdown) and "Work time" (tracker). If you already used the timers widget, a work time widget appears right below it (data schema 4).
+- Work time: a pause button (for a coffee break). Paused time is not counted; sessions remember how long the pauses were.
+- The "no sessions today" hint is no longer shown while a session is running.
+
+## 0.13.0
+
+- Column widths: drag the handle between two columns (double-click to make them equal, arrow keys when it has the focus).
+- Timers widget: a work time tracker (press play when you start a task, stop when you finish; sessions, totals for today and 7 days) and a countdown timer (presets or your own minutes, sound, optional notification when the time is up).
+- Calendar widget: month view, your own events with repeats (daily, weekly, monthly, yearly), the next events, import of `.ics` files. Everything stays in the browser.
+- Icons for bookmark groups: choose an emoji, type any emoji or use a picture from your computer.
+- Edit, pin and delete buttons are plain monochrome icons that follow the theme; the text fades out under them instead of a plate.
+- Data schema 3 (automatic migration). Optional permissions `alarms` and `notifications` (asked only for countdown notifications).
+
+## 0.12.0
+
+- Background picture from your computer: choose a PNG, JPEG or WebP file in the settings. It is resized and saved only in the browser (never uploaded) and works with transparent cards.
+- Imported backups are checked more strictly: backgrounds can only be plain colors, plain gradients or pictures (no remote `url()` in gradients).
+
 ## 0.11.1
 
 - Fix: rows of bookmarks, notes and tasks are highlighted on hover with fully transparent cards too (the highlight now works over any background); the edit/delete buttons float as a small solid toolbar.
-- Store screenshots for Firefox with captions; publishing guide updated: Firefox first, Chrome and Edge later.
 
 ## 0.11.0
 
-- Store preparation: privacy policy (`PRIVACY.md`), listing texts in English and Russian, promo images, publishing checklist (`store/`).
+- Privacy policy (`PRIVACY.md`).
 - Extension name and description are localized (`public/_locales`), so the stores and the browser show them in the user's language.
-- `npm run package` runs all checks and builds the store packages for Chromium and Firefox.
+- `npm run package` runs all checks and builds the packages for Chromium and Firefox.
 
 ## 0.10.1
 

@@ -6,9 +6,11 @@ import { createSelect } from './select';
 import { createSwatchPicker } from './swatch-picker';
 import { showToast } from './toast';
 import { availableLocales, t } from '@/lib/i18n';
-import { CARD_OPACITY_CHOICES, findPreset, MAX_COLUMNS, nearestCardOpacity, resolveBackground } from '@/lib/settings';
+import { CARD_OPACITY_CHOICES, findPreset, MAX_BACKGROUND_CHARS, MAX_COLUMNS, nearestCardOpacity, resolveBackground } from '@/lib/settings';
 import { saveSettings } from '@/lib/settings-store';
 import type { Page, Settings, ThemeMode, WidgetType } from '@/lib/types';
+import { pickFile } from '@/utils/download';
+import { imageFileToDataUrl } from '@/utils/image';
 
 interface SettingsResult {
   settings: Settings;
@@ -30,6 +32,9 @@ const WIDGET_CHOICES: { type: WidgetType; labelKey: string }[] = [
   { type: 'notes', labelKey: 'note.title' },
   { type: 'todos', labelKey: 'todo.title' },
   { type: 'clock', labelKey: 'clock.title' },
+  { type: 'timers', labelKey: 'timer.title' },
+  { type: 'worktime', labelKey: 'work.title' },
+  { type: 'calendar', labelKey: 'cal.title' },
 ];
 
 /** Shows the settings form. Resolves with the new values, or null when cancelled. */
@@ -88,14 +93,56 @@ function askSettings(current: Settings, page: Page): Promise<SettingsResult | nu
     });
 
     const isImage = current.background.type === 'image';
+    // A picture from the computer is stored as a "data:" URL; it is shown as a preview, never as text
+    let uploaded: string | null = isImage && current.background.value.startsWith('data:') ? current.background.value : null;
     const swatches = createSwatchPicker(isImage ? null : (findPreset(current.background)?.background ?? null));
     const imageInput = el('input', { attrs: { type: 'text', autocomplete: 'off', placeholder: 'https://example.com/picture.jpg' } });
-    imageInput.value = isImage ? current.background.value : '';
+    imageInput.value = isImage && !uploaded ? current.background.value : '';
+
+    const uploadButton = el('button', { class: 'btn', text: t('settings.imageUpload'), attrs: { type: 'button' } });
+    const preview = el('img', { class: 'bg-preview', attrs: { alt: t('settings.imagePreview') } });
+    const removeButton = el('button', { class: 'btn small', text: t('settings.imageRemove'), attrs: { type: 'button' } });
+    const previewRow = el('div', { class: 'bg-upload-preview' }, [preview, removeButton]);
+    const uploadError = el('p', { class: 'dialog-error' });
+    uploadError.hidden = true;
+    const showUpload = (): void => {
+      previewRow.hidden = uploaded === null;
+      if (uploaded) preview.src = uploaded;
+    };
+    showUpload();
+
+    // Only one of: preset, picture from the computer, web address
     swatches.onChange = () => {
       imageInput.value = '';
+      uploaded = null;
+      showUpload();
     };
     imageInput.addEventListener('input', () => {
-      if (imageInput.value.trim()) swatches.value = null;
+      if (!imageInput.value.trim()) return;
+      swatches.value = null;
+      uploaded = null;
+      showUpload();
+    });
+    uploadButton.addEventListener('click', () => {
+      void (async () => {
+        const file = await pickFile('image/png,image/jpeg,image/webp');
+        if (!file) return;
+        const dataUrl = await imageFileToDataUrl(file, MAX_BACKGROUND_CHARS);
+        if (!dataUrl) {
+          uploadError.textContent = t('settings.imageBad');
+          uploadError.hidden = false;
+          return;
+        }
+        uploadError.hidden = true;
+        uploaded = dataUrl;
+        swatches.value = null;
+        imageInput.value = '';
+        showUpload();
+      })();
+    });
+    removeButton.addEventListener('click', () => {
+      uploaded = null;
+      showUpload();
     });
 
     scroll.append(
@@ -104,6 +151,7 @@ function askSettings(current: Settings, page: Page): Promise<SettingsResult | nu
       el('label', { class: 'dialog-field' }, [el('span', { text: t('settings.cards') }), cards.element]),
       el('label', { class: 'dialog-field' }, [el('span', { text: t('settings.columns') }), columns.element]),
       el('div', { class: 'dialog-field' }, [el('span', { text: t('bg.title') }), swatches.element]),
+      el('div', { class: 'dialog-field' }, [uploadButton, previewRow, uploadError, el('p', { class: 'muted', text: t('settings.imageHint') })]),
       el('label', { class: 'dialog-field' }, [el('span', { text: t('settings.imageUrl') }), imageInput]),
     );
 
@@ -152,7 +200,7 @@ function askSettings(current: Settings, page: Page): Promise<SettingsResult | nu
     let result: SettingsResult | null = null;
     form.addEventListener('submit', (event) => {
       event.preventDefault();
-      const resolved = resolveBackground(swatches.value, imageInput.value);
+      const resolved = resolveBackground(swatches.value, imageInput.value, uploaded);
       if ('error' in resolved) {
         error.textContent = t(resolved.error);
         error.hidden = false;

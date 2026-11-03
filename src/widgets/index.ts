@@ -1,7 +1,10 @@
-import type { Note, Page, Todo, WidgetConfig } from '@/lib/types';
+import type { ActiveTracker, CalendarEvent, Countdown, Note, Page, TimeEntry, Todo, WidgetConfig } from '@/lib/types';
 import { renderBookmarksWidget } from './bookmarks';
+import { renderCalendarWidget } from './calendar';
 import { renderClockWidget } from './clock';
 import { renderNotesWidget } from './notes';
+import { renderTimersWidget } from './timers';
+import { renderWorkTimeWidget } from './worktime';
 import { renderTodosWidget } from './todos';
 
 /** Everything a widget may need to render itself. */
@@ -9,6 +12,10 @@ export interface WidgetContext {
   page: Page;
   notes: Note[];
   todos: Todo[];
+  timeEntries: TimeEntry[];
+  activeTracker: ActiveTracker | null;
+  countdown: Countdown | null;
+  events: CalendarEvent[];
   siteIcons: boolean;
 }
 
@@ -23,5 +30,11 @@ export function renderWidget(widget: WidgetConfig, ctx: WidgetContext): HTMLElem
       return renderTodosWidget(widget, ctx.todos);
     case 'clock':
       return renderClockWidget(widget, ctx.page);
+    case 'timers':
+      return renderTimersWidget(widget, ctx.page, ctx.countdown);
+    case 'worktime':
+      return renderWorkTimeWidget(widget, ctx.timeEntries, ctx.activeTracker);
+    case 'calendar':
+      return renderCalendarWidget(widget, ctx.events);
   }
 }

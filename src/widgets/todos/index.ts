@@ -1,4 +1,5 @@
 import { el } from '@/components/dom';
+import { iconButton } from '@/components/icon-button';
 import { openFormDialog } from '@/components/dialog';
 import { warningIcon } from '@/components/icons';
 import { widgetFrame } from '@/components/widget-frame';
@@ -129,8 +130,8 @@ export function renderTodosWidget(widget: WidgetConfig, todos: Todo[]): HTMLElem
         checkbox,
         el('span', { class: 'todo-main' }, parts),
         el('span', { class: 'row-actions' }, [
-          smallButton('✎', t('todo.editTip'), () => void onEdit(todo)),
-          smallButton('✕', t('todo.deleteTip'), () => void updateTodos((l) => deleteTodo(l, todo.id))),
+          iconButton('edit', t('todo.editTip'), () => void onEdit(todo)),
+          iconButton('delete', t('todo.deleteTip'), () => void updateTodos((l) => deleteTodo(l, todo.id))),
         ]),
       ]),
     );

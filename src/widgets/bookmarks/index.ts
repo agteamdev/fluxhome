@@ -1,5 +1,7 @@
 import { bookmarkIcon } from '@/components/bookmark-icon';
+import { groupIconElement } from '@/components/group-icon';
 import { el } from '@/components/dom';
+import { iconButton } from '@/components/icon-button';
 import { confirmDialog, openFormDialog } from '@/components/dialog';
 import { widgetFrame } from '@/components/widget-frame';
 import { t } from '@/lib/i18n';
@@ -8,6 +10,7 @@ import { updatePage } from '@/lib/page-store';
 import type { Bookmark, Page, WidgetConfig } from '@/lib/types';
 import { uid } from '@/utils/id';
 import { hostnameOf, normalizeUrl } from '@/utils/url';
+import { openGroupDialog } from './group-dialog';
 import {
   makeBookmarkDraggable,
   makeBookmarkListDropZone,
@@ -64,25 +67,22 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page, siteIcon
 
   // ---- actions ----
   async function onAddGroup(): Promise<void> {
-    const values = await openFormDialog({
-      title: t('bm.newGroup'),
-      submitLabel: t('common.create'),
-      fields: [{ name: 'title', label: t('bm.groupName'), required: true }],
-    });
+    const values = await openGroupDialog({ title: t('bm.newGroup'), submitLabel: t('common.create'), name: '', icon: null });
     if (!values) return;
     const id = uid();
     activeGroupByWidget.set(widget.id, id);
-    await updatePage(page.id, (p) => ops.addGroup(p, { id, title: values.title!, bookmarks: [] }));
+    await updatePage(page.id, (p) => ops.addGroup(p, { id, title: values.title, bookmarks: [], ...(values.icon ? { icon: values.icon } : {}) }));
   }
 
   async function onRenameGroup(): Promise<void> {
-    const values = await openFormDialog({
+    const values = await openGroupDialog({
       title: t('bm.renameGroup'),
       submitLabel: t('common.save'),
-      fields: [{ name: 'title', label: t('bm.groupName'), value: activeGroup.title, required: true }],
+      name: activeGroup.title,
+      icon: activeGroup.icon ?? null,
     });
     if (!values) return;
-    await updatePage(page.id, (p) => ops.renameGroup(p, activeGroup.id, values.title!));
+    await updatePage(page.id, (p) => ops.setGroupIcon(ops.renameGroup(p, activeGroup.id, values.title), activeGroup.id, values.icon));
   }
 
   async function onDeleteGroup(): Promise<void> {
@@ -120,11 +120,14 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page, siteIcon
   for (const group of page.groups) {
     const isActive = group.id === activeGroup.id;
     // A <span>, not a <button>: Firefox cannot drag buttons
-    const tab = el('span', {
-      class: isActive ? 'tab active' : 'tab',
-      text: group.title,
-      attrs: { role: 'tab', tabindex: '0', 'aria-selected': String(isActive), 'data-group-id': group.id, title: t('bm.dragTab') },
-    });
+    const tab = el(
+      'span',
+      {
+        class: isActive ? 'tab active' : 'tab',
+        attrs: { role: 'tab', tabindex: '0', 'aria-selected': String(isActive), 'data-group-id': group.id, title: t('bm.dragTab') },
+      },
+      [...(group.icon ? [groupIconElement(group.icon)] : []), document.createTextNode(group.title)],
+    );
     const select = (): void => {
       activeGroupByWidget.set(widget.id, group.id);
       // Re-render this widget only; selection is UI state and is not persisted
@@ -150,8 +153,8 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page, siteIcon
   const tabs = el('div', { class: 'tabs' }, [
     tabList,
     el('span', { class: 'tab-actions' }, [
-      smallButton('✎', t('bm.renameGroup'), () => void onRenameGroup()),
-      smallButton('✕', t('bm.deleteGroup'), () => void onDeleteGroup()),
+      iconButton('edit', t('bm.renameGroup'), () => void onRenameGroup()),
+      iconButton('delete', t('bm.deleteGroup'), () => void onDeleteGroup()),
     ]),
   ]);
 
@@ -168,8 +171,8 @@ export function renderBookmarksWidget(widget: WidgetConfig, page: Page, siteIcon
     const row = el('li', { class: 'link-row', attrs: { 'data-bookmark-id': bookmark.id } }, [
       link,
       el('span', { class: 'row-actions' }, [
-        smallButton('✎', t('bm.editBookmark'), () => void onEditBookmark(bookmark)),
-        smallButton('✕', t('bm.deleteBookmark'), () => {
+        iconButton('edit', t('bm.editBookmark'), () => void onEditBookmark(bookmark)),
+        iconButton('delete', t('bm.deleteBookmark'), () => {
           void updatePage(page.id, (p) => ops.deleteBookmark(p, activeGroup.id, bookmark.id));
         }),
       ]),

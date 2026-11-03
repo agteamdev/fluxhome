@@ -47,3 +47,48 @@ describe('migration 1 -> 2', () => {
     expect(result.settings.language).toBe('auto');
   });
 });
+
+describe('migration 2 -> 3', () => {
+  it('adds empty timers and calendar data', () => {
+    const result = migrateData({ pages: [], settings: {} }, 2) as Record<string, unknown>;
+    expect(result.timeEntries).toEqual([]);
+    expect(result.events).toEqual([]);
+    expect(result.activeTracker).toBe(null);
+    expect(result.countdown).toBe(null);
+    expect(result.schemaVersion).toBe(SCHEMA_VERSION);
+  });
+  it('keeps existing values', () => {
+    const entries = [{ id: 'a', label: 'x', start: 1, end: 2 }];
+    expect((migrateData({ timeEntries: entries }, 2) as Record<string, unknown>).timeEntries).toEqual(entries);
+  });
+  it('migrates all the way from version 1', () => {
+    const result = migrateData(v1(), 1) as Record<string, unknown>;
+    expect(result.events).toEqual([]);
+    expect((result.settings as Record<string, unknown>).language).toBe('auto');
+  });
+});
+
+describe('migration 3 -> 4', () => {
+  const page = (widgets: unknown[]) => ({ pages: [{ id: 'p', widgets }] });
+  const run = (widgets: unknown[]) =>
+    (migrateData(page(widgets), 3) as { pages: { widgets: { id: string; type: string; columnId: string; order: number }[] }[] }).pages[0]!.widgets;
+
+  it('adds a work time widget right below the timers widget', () => {
+    const result = run([
+      widget('a', 'bookmarks'),
+      { id: 't', type: 'timers', columnId: 'c1', order: 1, props: {} },
+      { id: 'n', type: 'notes', columnId: 'c1', order: 2, props: {} },
+    ]);
+    const work = result.find((w) => w.type === 'worktime')!;
+    expect(work.columnId).toBe('c1');
+    expect(work.order).toBe(2);
+    expect(result.find((w) => w.id === 'n')!.order).toBe(3);
+  });
+  it('does nothing without a timers widget or when a work time widget exists', () => {
+    expect(run([widget('a', 'bookmarks')]).map((w) => w.type)).toEqual(['bookmarks']);
+    expect(run([widget('t', 'timers'), widget('w', 'worktime')]).filter((w) => w.type === 'worktime')).toHaveLength(1);
+  });
+  it('survives data without pages', () => {
+    expect((migrateData({}, 3) as { pages: unknown[] }).pages).toEqual([]);
+  });
+});

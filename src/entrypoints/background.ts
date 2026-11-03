@@ -3,6 +3,7 @@ import { initStorage, loadConfig } from '@/lib/config';
 import { setLanguage, t } from '@/lib/i18n';
 import { addBookmarkToFirstGroup, findBookmarkByUrl } from '@/lib/page-ops';
 import { updatePage } from '@/lib/page-store';
+import { COUNTDOWN_ALARM } from '@/lib/timers-ops';
 import { storage } from '@/lib/storage';
 import { uid } from '@/utils/id';
 import { hostnameOf, normalizeUrl } from '@/utils/url';
@@ -62,5 +63,20 @@ export default defineBackground(() => {
 
   browser.contextMenus.onClicked.addListener((info, tab) => {
     void saveFromMenu(info, tab?.title);
+  });
+
+  // Countdown finished while no FluxHome tab was open. The alarms API exists only after the user allowed it.
+  browser.alarms?.onAlarm.addListener((alarm) => {
+    if (alarm.name !== COUNTDOWN_ALARM) return;
+    void (async () => {
+      const settings = await storage.get('settings');
+      setLanguage(settings?.language ?? 'auto');
+      await browser.notifications?.create(COUNTDOWN_ALARM, {
+        type: 'basic',
+        iconUrl: browser.runtime.getURL('/icons/128.png'),
+        title: t('timer.doneTitle'),
+        message: t('timer.doneMessage'),
+      });
+    })();
   });
 });

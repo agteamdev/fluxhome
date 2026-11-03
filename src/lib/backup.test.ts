@@ -96,6 +96,70 @@ describe('sanitizing', () => {
   });
 });
 
+describe('imported backgrounds', () => {
+  it('drops a gradient that would load a remote picture', () => {
+    const backup = buildBackup(createDefaultData());
+    backup.data.settings.background = { type: 'gradient', value: 'linear-gradient(red, url(https://tracker.test/p.png))' };
+    expect(roundTrip(backup).data.settings.background).toEqual({ type: 'solid', value: '' });
+  });
+  it('keeps an uploaded picture', () => {
+    const backup = buildBackup(createDefaultData());
+    const value = 'data:image/jpeg;base64,/9j/4AAQ';
+    backup.data.settings.background = { type: 'image', value };
+    expect(roundTrip(backup).data.settings.background).toEqual({ type: 'image', value });
+  });
+});
+
+describe('timers, calendar and group icons', () => {
+  it('keeps valid data and drops invalid entries', () => {
+    const backup = buildBackup(createDefaultData());
+    backup.data.timeEntries.push(
+      { id: 't1', label: 'Report', start: 1000, end: 5000 },
+      { id: 't2', label: 'Backwards', start: 5000, end: 1000 },
+      { id: 't3', label: 'Forever', start: 1000, end: 1000 + 30 * 24 * 3_600_000 },
+    );
+    backup.data.events.push(
+      { id: 'e1', title: 'Birthday', date: '2026-10-30', repeat: 'yearly' },
+      { id: 'e2', title: 'Bad date', date: '2026-02-31', repeat: 'none' },
+      { id: 'e3', title: 'Meeting', date: '2026-10-27', time: '9:05', repeat: 'weird' as never },
+    );
+    const result = roundTrip(backup);
+    expect(result.data.timeEntries.map((e) => e.id)).toEqual(['t1']);
+    expect(result.data.events.map((e) => e.id)).toEqual(['e1', 'e3']);
+    expect(result.data.events[1]).toEqual({ id: 'e3', title: 'Meeting', date: '2026-10-27', time: '09:05', repeat: 'none' });
+    expect(result.dropped).toBe(3);
+  });
+  it('keeps pauses of sessions and of the running tracker', () => {
+    const backup = buildBackup(createDefaultData());
+    backup.data.timeEntries.push(
+      { id: 'ok', label: 'A', start: 1000, end: 10_000, pausedMs: 2000 },
+      { id: 'long', label: 'B', start: 1000, end: 10_000, pausedMs: 99_999 },
+    );
+    backup.data.activeTracker = { label: 'Work', start: 12345, pausedMs: 500, pausedAt: 20_000 };
+    const result = roundTrip(backup);
+    expect(result.data.timeEntries.find((e) => e.id === 'ok')!.pausedMs).toBe(2000);
+    expect(result.data.timeEntries.find((e) => e.id === 'long')!.pausedMs).toBe(undefined);
+    expect(result.data.activeTracker).toEqual({ label: 'Work', start: 12345, pausedMs: 500, pausedAt: 20_000 });
+  });
+  it('checks the running tracker and countdown', () => {
+    const backup = buildBackup(createDefaultData());
+    backup.data.activeTracker = { label: 'Work', start: 12345 };
+    backup.data.countdown = { end: 99999, durationMs: 5000, label: 'too short' };
+    const result = roundTrip(backup);
+    expect(result.data.activeTracker).toEqual({ label: 'Work', start: 12345 });
+    expect(result.data.countdown).toBe(null);
+  });
+  it('keeps a safe group icon and drops an unsafe one', () => {
+    const backup = buildBackup(createDefaultData());
+    const [first, second] = backup.data.pages[0]!.groups;
+    first!.icon = { type: 'emoji', value: '🏠' };
+    (second as { icon?: unknown }).icon = { type: 'image', value: 'https://tracker.test/x.png' };
+    const groups = roundTrip(backup).data.pages[0]!.groups;
+    expect(groups[0]!.icon).toEqual({ type: 'emoji', value: '🏠' });
+    expect(groups[1]!.icon).toBe(undefined);
+  });
+});
+
 describe('todo deadlines', () => {
   it('keeps a deadline with a time and drops a time flag without a deadline', () => {
     const backup = buildBackup(createDefaultData());
