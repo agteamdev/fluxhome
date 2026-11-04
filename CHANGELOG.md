@@ -4,6 +4,8 @@ This project follows [Semantic Versioning](https://semver.org).
 
 ## 0.14.0
 
+Released on the Firefox Add-ons store (approved).
+
 - The timers are split in two widgets: "Timers" (countdown) and "Work time" (tracker). If you already used the timers widget, a work time widget appears right below it (data schema 4).
 - Work time: a pause button (for a coffee break). Paused time is not counted; sessions remember how long the pauses were.
 - The "no sessions today" hint is no longer shown while a session is running.

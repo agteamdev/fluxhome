@@ -2,15 +2,48 @@
 
 # FluxHome
 
-A local-first start page for Chromium-based browsers and Firefox.
-All data stays in your browser. No cloud, no ads, no telemetry.
+A private, local-first start page for your new tab: bookmarks, notes, tasks, calendar, clocks, timers and work time tracking.
+Everything stays in your browser. No account, no cloud, no ads, no telemetry.
 
-## Requirements
+**[Add to Firefox](https://addons.mozilla.org/en-US/firefox/addon/fluxhome/)** · [Install in Chrome, Brave or Edge](#chrome-brave-edge-vivaldi-opera) · [Privacy policy](PRIVACY.md)
+
+## Features
+
+- **Bookmarks** in groups (tabs) with emoji or picture icons; drag to reorder; optional site icons.
+- **Notes** with Markdown, pinned notes.
+- **Tasks** with priorities, deadlines and times; overdue tasks are marked.
+- **Calendar** with your own events and repeats; import `.ics` files (read on your device).
+- **Work time** tracking with start, pause and stop, and totals for today and the last 7 days.
+- **Timers**: a countdown with presets, a sound and an optional notification.
+- **Clocks**: digital or analog, plus world clocks.
+- **Search**: instant search through your bookmarks and a web search bar (Brave Search, DuckDuckGo or Google).
+- **Looks**: light, dark or automatic theme, backgrounds or your own picture, transparent "glass" cards, 1 to 4 columns with adjustable width.
+- **Languages**: English and Russian; more can be added by dropping a file into `src/locales` ([how to translate](docs/TRANSLATING.md)).
+- **Your data**: export and import as a JSON backup; right-click any link or page to save it.
+
+## Install
+
+### Firefox
+
+Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/fluxhome/). Requires Firefox 140 or newer.
+Firefox for Android does not support new tab overrides.
+
+### Chrome, Brave, Edge, Vivaldi, Opera
+
+FluxHome is not on the Chrome Web Store yet, so it is installed manually (it does not update by itself):
+
+1. Download `fluxhome-<version>-chrome.zip` from the [latest release](https://github.com/agteamdev/fluxhome/releases/latest) and unzip it.
+2. Open `chrome://extensions` (Brave: `brave://extensions`, Edge: `edge://extensions`) and enable **Developer mode**.
+3. Click **Load unpacked** and select the unzipped folder.
+
+## Development
+
+### Requirements
 
 - Node.js 20+ (22 LTS recommended)
 - npm
 
-## Getting started
+### Getting started
 
 ```bash
 npm install
@@ -25,18 +58,16 @@ npm run verify         # lint + typecheck + tests + both builds + build checks
 
 See [docs/TESTING.md](docs/TESTING.md) for the manual checklist.
 
-### Install in Brave / Chrome / Edge
+### Run from source in Brave / Chrome / Edge
 
 1. Open `brave://extensions` (Chrome: `chrome://extensions`).
 2. Enable **Developer mode**.
 3. Click **Load unpacked** and select the `.output/chrome-mv3` folder.
 
-### Install in Firefox
+### Run from source in Firefox
 
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Click **Load Temporary Add-on** and select `.output/firefox-mv3/manifest.json`.
-
-Requires Firefox 140 or newer. Firefox for Android does not support new tab overrides and is not a target.
 
 ## Project structure
 
