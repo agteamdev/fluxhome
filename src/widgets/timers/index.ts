@@ -55,7 +55,7 @@ export function renderTimersWidget(widget: WidgetConfig, page: Page, countdown: 
     body.append(
       el('div', { class: 'tracker-running' }, [
         el('div', { class: 'tracker-info' }, [remaining, el('div', { class: 'countdown-bar' }, [fill])]),
-        iconButton('close', finished ? t('timer.dismiss') : t('timer.cancel'), () => void onCancel()),
+        iconButton('close', finished ? t('timer.dismiss') : t('timer.cancel'), () => void onCancel(), 'ghost-btn'),
       ]),
     );
 
@@ -95,18 +95,23 @@ export function renderTimersWidget(widget: WidgetConfig, page: Page, countdown: 
       class: 'minutes-input',
       attrs: { type: 'text', placeholder: t('timer.minutes'), 'aria-label': t('timer.minutes'), autocomplete: 'off', maxlength: '5' },
     });
-    const bell = iconButton(notifyOn ? 'bell' : 'bellOff', notifyOn ? t('timer.notifyOn') : t('timer.notifyOff'), () => {
-      if (notifyOn) {
-        void saveNotify(false);
-        return;
-      }
-      // The browser only shows its permission prompt for a call made directly inside a click
-      const request = browser.permissions.request({ permissions: ['alarms', 'notifications'] }).catch(() => false);
-      void (async () => {
-        if (await request) await saveNotify(true);
-        else showToast(t('timer.notifyDenied'), 'error');
-      })();
-    });
+    const bell = iconButton(
+      notifyOn ? 'bell' : 'bellOff',
+      notifyOn ? t('timer.notifyOn') : t('timer.notifyOff'),
+      () => {
+        if (notifyOn) {
+          void saveNotify(false);
+          return;
+        }
+        // The browser only shows its permission prompt for a call made directly inside a click
+        const request = browser.permissions.request({ permissions: ['alarms', 'notifications'] }).catch(() => false);
+        void (async () => {
+          if (await request) await saveNotify(true);
+          else showToast(t('timer.notifyDenied'), 'error');
+        })();
+      },
+      'ghost-btn',
+    );
     const form = el('form', { class: 'tracker-form' }, [input, roundButton('play', t('timer.startCountdown'), 'submit'), bell]);
     form.addEventListener('submit', (event) => {
       event.preventDefault();

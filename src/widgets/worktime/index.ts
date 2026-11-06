@@ -62,7 +62,8 @@ export function renderWorkTimeWidget(widget: WidgetConfig, entries: TimeEntry[],
   if (active) {
     const paused = isPaused(active);
     const elapsed = el('div', { class: paused ? 'tracker-elapsed paused' : 'tracker-elapsed' });
-    const labelRow = el('div', { class: 'tracker-label' }, [active.label || t('work.untitled')]);
+    // The row has a fixed height, so the "Paused" tag does not push the rest of the widget down
+    const labelRow = el('div', { class: 'tracker-label' }, [el('span', { class: 'tracker-label-text', text: active.label || t('work.untitled') })]);
     if (paused) labelRow.append(el('span', { class: 'paused-pill', text: t('work.paused') }));
 
     const toggle = roundButton(paused ? 'play' : 'pause', paused ? t('work.resume') : t('work.pause'));
@@ -139,9 +140,12 @@ export function renderWorkTimeWidget(widget: WidgetConfig, entries: TimeEntry[],
       }
       list.append(
         el('li', { class: 'entry' }, [
-          el('span', { class: 'entry-label', text: entry.label || t('work.untitled') }),
-          time,
-          el('span', { class: 'entry-duration', text: formatDuration(entryDuration(entry), false) }),
+          el('div', { class: 'entry-main' }, [
+            el('span', { class: 'entry-label', text: entry.label || t('work.untitled') }),
+            time,
+            el('span', { class: 'entry-duration', text: formatDuration(entryDuration(entry), false) }),
+          ]),
+          // Like in the other lists: the buttons float over the end of the row and do not move the record
           el('span', { class: 'row-actions' }, [
             iconButton('edit', t('work.rename'), () => void onRename(entry)),
             iconButton('delete', t('work.deleteEntry'), () => void updateTimeEntries((l) => deleteEntry(l, entry.id))),

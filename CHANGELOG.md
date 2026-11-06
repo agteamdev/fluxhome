@@ -2,9 +2,12 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
-## 0.14.0
+## 0.14.1
 
-Released on the Firefox Add-ons store (approved).
+- Work time: the edit and delete buttons of a session float over the row on hover like everywhere else (they no longer push the record); the "Paused" tag no longer shifts the widget down.
+- Timers: controls have the same size and even spacing (preset buttons, minutes field, start, notification and cancel buttons).
+
+## 0.14.0
 
 - The timers are split in two widgets: "Timers" (countdown) and "Work time" (tracker). If you already used the timers widget, a work time widget appears right below it (data schema 4).
 - Work time: a pause button (for a coffee break). Paused time is not counted; sessions remember how long the pauses were.

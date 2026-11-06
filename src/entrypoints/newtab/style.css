@@ -412,7 +412,8 @@ body {
 .link-row:hover .link-title, .link-row:focus-within .link-title,
 .note-row:hover .note-title, .note-row:focus-within .note-title,
 .note-row:hover .note-preview, .note-row:focus-within .note-preview,
-.todo:hover .todo-main, .todo:focus-within .todo-main {
+.todo:hover .todo-main, .todo:focus-within .todo-main,
+.entry:hover .entry-main, .entry:focus-within .entry-main {
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 84px), transparent calc(100% - 58px));
   mask-image: linear-gradient(to right, #000 calc(100% - 84px), transparent calc(100% - 58px));
 }
@@ -446,29 +447,32 @@ body {
 .timer-section + .timer-section { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
 .timer-heading { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 .mini-grid + .timer-heading { margin-top: 12px; }
-.tracker-form { display: flex; align-items: center; gap: 8px; }
+.tracker-form { display: flex; align-items: center; gap: 10px; }
+.chip-row + .tracker-form { margin-top: 12px; }
 .tracker-input, .minutes-input {
   flex: 1; min-width: 0; border: 1px solid var(--border); background: var(--bg); color: var(--text);
-  border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 14px;
+  height: 36px; border-radius: 8px; padding: 0 12px; font: inherit; font-size: 14px;
 }
-.minutes-input { flex: 0 1 90px; }
+.minutes-input { flex: 0 1 96px; }
 .tracker-input:focus, .minutes-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .round-btn {
-  flex: none; display: grid; place-items: center; width: 34px; height: 34px; padding: 0;
+  flex: none; display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
   border: 0; border-radius: 50%; background: var(--accent); color: #fff; cursor: pointer;
 }
 .round-btn:hover { filter: brightness(1.1); }
 .round-btn.stop { background: #d64550; }
 .round-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .chip {
   max-width: 100%; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 999px;
-  padding: 3px 10px; font: inherit; font-size: 12px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: inline-flex; align-items: center; height: 28px; padding: 0 12px; font: inherit; font-size: 13px;
+  cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .chip:hover { background: var(--hover); }
-.tracker-running { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tracker-running { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .tracker-info { flex: 1; min-width: 0; }
-.tracker-label { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tracker-label { display: flex; align-items: center; gap: 8px; height: 22px; min-width: 0; font-size: 14px; }
+.tracker-label-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tracker-elapsed, .countdown-remaining { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .countdown-remaining.done { color: #d99a00; }
 .countdown-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; margin-top: 6px; }
@@ -476,15 +480,12 @@ body {
 .tracker-totals { display: flex; justify-content: space-between; margin-top: 10px; font-size: 13px; color: var(--muted); }
 .tracker-totals strong { color: var(--text); font-variant-numeric: tabular-nums; }
 .entries { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.entry { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 8px; font-size: 13px; }
+.entry { position: relative; display: flex; align-items: center; padding: 5px 8px; border-radius: 8px; font-size: 13px; }
+.entry-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
 .entry:hover { background: var(--hover); }
 .entry-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .entry-time { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .entry-duration { font-weight: 600; font-variant-numeric: tabular-nums; }
-/* Session actions sit in the row (not over it) and show only on hover */
-.entry .row-actions { position: static; transform: none; opacity: 1; pointer-events: auto; display: none; padding: 0; }
-.entry:hover .row-actions, .entry:focus-within .row-actions { display: flex; }
-
 /* Calendar */
 .mini-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .mini-title { font-weight: 600; font-size: 14px; text-transform: capitalize; }
@@ -520,12 +521,17 @@ body {
 .day-event-actions { display: flex; }
 
 /* Work time: pause */
-.tracker-buttons { display: flex; align-items: center; gap: 8px; flex: none; }
+.tracker-buttons { display: flex; align-items: center; gap: 10px; flex: none; }
 .round-btn.pause { background: var(--hover); color: var(--text); }
 .round-btn.pause:hover { filter: none; background: color-mix(in srgb, var(--text) 20%, transparent); }
 .tracker-elapsed.paused { opacity: 0.55; }
 .paused-pill {
-  margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px;
+  flex: none; box-sizing: border-box; height: 18px; padding: 0 8px; border-radius: 999px; font-size: 11px; line-height: 16px;
   border: 1px solid #d99a00; color: #d99a00;
 }
 .entry-time.has-pause { text-decoration: underline dotted; text-underline-offset: 3px; }
+
+/* Round outline buttons (bell, cancel) in the size of the other timer controls */
+.icon-action.ghost-btn { flex: none; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 50%; }
+.icon-action.ghost-btn svg { width: 18px; height: 18px; }
+.icon-action.ghost-btn:hover { background: var(--hover); }
