@@ -36,11 +36,12 @@ export default defineConfig({
     //  - storage: all data stays in the browser
     //  - activeTab: the toolbar popup reads the title/address of the current tab when you click it
     //  - contextMenus: "Save link / page to FluxHome" in the right-click menu
+    //  - alarms: wakes the extension when a countdown timer ends (no prompt for the user; Firefox does not allow it as optional)
     // Access to websites is optional: it is requested only if you turn on "site icons" in the settings.
-    permissions: ['storage', 'activeTab', 'contextMenus'],
+    permissions: ['storage', 'activeTab', 'contextMenus', 'alarms'],
     optional_host_permissions: ['<all_urls>'],
     // Asked for only when the user turns on notifications for the countdown timer
-    optional_permissions: ['alarms', 'notifications'],
+    optional_permissions: ['notifications'],
     // Listed explicitly (files live in public/icons) instead of relying on automatic detection
     icons: {
       16: 'icons/16.png',

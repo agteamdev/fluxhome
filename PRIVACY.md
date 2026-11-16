@@ -1,6 +1,6 @@
 # FluxHome Privacy Policy
 
-_Last updated: October 29, 2026_
+_Last updated: November 5, 2026_
 
 FluxHome is a browser extension that replaces your new tab page with a start page of bookmarks, notes, tasks and clocks.
 It is built for people who want to keep control of their data.
@@ -45,7 +45,8 @@ FluxHome does not contact any server operated by its authors.
 | `activeTab` | When you click the toolbar button, the popup reads the title and address of the current tab so you can save it. It is not used otherwise. |
 | `contextMenus` | Adds "Save link to FluxHome" and "Save this page to FluxHome" to the right-click menu. |
 | Access to websites (optional) | Requested only if you turn on site icons, to download each site's own icon. |
-| Alarms and notifications (optional) | Requested only if you turn on "notify me when the time is up" for the countdown timer, so the browser can show a notification even when no FluxHome tab is open. |
+| `alarms` | Lets the browser wake FluxHome when a countdown timer ends. It is used only if you turned on the timer notification. The browser shows no prompt for it. |
+| Notifications (optional) | Requested only if you turn on "notify me when the time is up" for the countdown timer, so the browser can show a notification even when no FluxHome tab is open. |
 | New tab page override | Shows FluxHome instead of the default new tab page. |
 
 FluxHome does not read your browsing history, your browser's own bookmarks, your cookies, or the content of the pages you visit.

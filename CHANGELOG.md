@@ -2,6 +2,10 @@
 
 This project follows [Semantic Versioning](https://semver.org).
 
+## 0.14.2
+
+- Fix: Firefox reported `Invalid optional_permissions "alarms"`. Firefox does not allow `alarms` as an optional permission, so it is now a regular permission (the browser shows no prompt for it). Only `notifications` stays optional and is requested when you turn on the timer notification.
+
 ## 0.14.1
 
 - Work time: the edit and delete buttons of a session float over the row on hover like everywhere else (they no longer push the record); the "Paused" tag no longer shifts the widget down.

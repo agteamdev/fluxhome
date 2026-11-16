@@ -5,9 +5,12 @@ import { join } from 'node:path';
 
 const outputDir = process.argv[2] ?? '.output';
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // package size limit from the spec (without images)
-const REQUIRED_PERMISSIONS = ['storage', 'activeTab', 'contextMenus'];
+const REQUIRED_PERMISSIONS = ['storage', 'activeTab', 'contextMenus', 'alarms'];
 // Permissions that must NOT be requested up front (stores reject unused or excessive permissions)
-const FORBIDDEN_PERMISSIONS = ['tabs', 'bookmarks', 'alarms', 'history', 'downloads', 'webRequest', 'cookies'];
+const FORBIDDEN_PERMISSIONS = ['tabs', 'bookmarks', 'history', 'downloads', 'webRequest', 'cookies'];
+
+// Firefox rejects these as optional permissions ("Invalid optional_permissions"); they must be declared in "permissions"
+const NOT_OPTIONAL_IN_FIREFOX = ['alarms', 'background', 'contentSettings', 'contextualIdentities', 'debugger', 'downloads', 'downloads.open', 'find', 'identity', 'menus', 'pageCapture', 'privacy', 'storage', 'theme'];
 
 let failures = 0;
 const fail = (target, message) => {
@@ -68,6 +71,9 @@ function checkBuild(name, dir, { firefox }) {
 
   const missing = REQUIRED_PERMISSIONS.filter((p) => !(m.permissions ?? []).includes(p));
   missing.length === 0 ? ok(name, 'permissions') : fail(name, `missing permissions: ${missing.join(', ')}`);
+
+  const badOptional = NOT_OPTIONAL_IN_FIREFOX.filter((p) => (m.optional_permissions ?? []).includes(p));
+  badOptional.length === 0 ? ok(name, 'optional permissions are valid in Firefox') : fail(name, `not allowed as optional in Firefox: ${badOptional.join(', ')}`);
 
   const forbidden = FORBIDDEN_PERMISSIONS.filter((p) => (m.permissions ?? []).includes(p));
   forbidden.length === 0 ? ok(name, 'no unneeded permissions') : fail(name, `unneeded permissions: ${forbidden.join(', ')}`);

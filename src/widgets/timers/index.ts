@@ -31,7 +31,7 @@ export function renderTimersWidget(widget: WidgetConfig, page: Page, countdown: 
     await setCountdown(next);
     try {
       // A notification when the time is up, even if no FluxHome tab is open (only if the user allowed it)
-      if (notifyOn && (await browser.permissions.contains({ permissions: ['alarms', 'notifications'] }))) {
+      if (notifyOn && (await browser.permissions.contains({ permissions: ['notifications'] }))) {
         await browser.alarms.create(COUNTDOWN_ALARM, { when: next.end });
       }
     } catch {
@@ -104,7 +104,7 @@ export function renderTimersWidget(widget: WidgetConfig, page: Page, countdown: 
           return;
         }
         // The browser only shows its permission prompt for a call made directly inside a click
-        const request = browser.permissions.request({ permissions: ['alarms', 'notifications'] }).catch(() => false);
+        const request = browser.permissions.request({ permissions: ['notifications'] }).catch(() => false);
         void (async () => {
           if (await request) await saveNotify(true);
           else showToast(t('timer.notifyDenied'), 'error');
